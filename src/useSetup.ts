@@ -1,60 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { fetchAccounts, fetchCloudflaredVersion, fetchTunnelConfig, fetchTunnels, startTunnel, stopTunnel } from "./api";
-
-export type ConfigInfo = {
-  service: string;
-  proto?: string;
-  host?: string;
-  port?: number;
-  hostname?: string;
-};
-
-export type TunnelSummary = {
-  id: string;
-  name: string;
-  status?: string;
-  createdAt?: string;
-  port?: number;
-  service?: string; // legacy single-service reference
-  services?: string[];
-  metadata?: Record<string, unknown>;
-  displayConfigs?: ConfigInfo[];
-  configs?: ConfigInfo[];
-  hiddenHttpCount?: number;
-  connectService?: string;
-  connectHost?: string;
-  portMap?: Array<{ host: string; port: number; proto?: string }>;
-  connectionIp?: string;
-  clientVersion?: string;
-  connectionCount?: number;
-  coloNames?: string[];
-};
-
-export type Settings = {
-  apiKey: string;
-  accountId?: string;
-  accountName?: string;
-  portStart: string;
-  hideHttp: boolean;
-  hideIp: boolean;
-  hideOffline: boolean;
-};
-
-type Persisted = Settings & { verified?: boolean };
-
-const STORAGE_KEY = "tunneldash:settings";
-const DEFAULTS: Settings = {
-  apiKey: "",
-  accountId: undefined,
-  accountName: undefined,
-  portStart: "50000",
-  hideHttp: false,
-  hideIp: false,
-  hideOffline: false,
-};
+import { ConfigInfo, Settings, TunnelSummary } from "./types";
+import { clearStoredSettings, DEFAULT_SETTINGS, loadSettings, persistSettings } from "./utils/settingsStorage";
+import { buildConfigsForTunnel, filterAndSortTunnels, isHttpProtocol, parseHost, parseProtocol, toTunnelSummary } from "./utils/tunnelTransforms";
 
 export function useSetup() {
-  const [settings, setSettings] = useState<Settings>(DEFAULTS);
+  const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [verified, setVerified] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -73,15 +24,9 @@ export function useSetup() {
 
 
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (!saved) return;
-    try {
-      const parsed: Persisted = JSON.parse(saved);
-      setSettings({ ...DEFAULTS, ...parsed });
-      setVerified(Boolean(parsed.verified));
-    } catch (e) {
-      console.warn("could not read saved settings", e);
-    }
+    const { settings: loadedSettings, verified: wasVerified } = loadSettings();
+    setSettings(loadedSettings);
+    setVerified(wasVerified);
   }, []);
 
   const isPortValid = useMemo(() => {
@@ -92,8 +37,7 @@ export function useSetup() {
   const save = (patch: Partial<Settings & { verified?: boolean }>) => {
     const next: Settings = { ...settings, ...patch } as Settings;
     setSettings(next);
-    const payload: Persisted = { ...next, verified: patch.verified ?? verified };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    persistSettings(next, patch.verified ?? verified);
   };
 
   const verify = async () => {
@@ -121,54 +65,13 @@ export function useSetup() {
       await Promise.all(hosts.map((h) => stopTunnel(h).catch(() => undefined)));
     }
 
-    localStorage.removeItem(STORAGE_KEY);
-    setSettings(DEFAULTS);
+    clearStoredSettings();
+    setSettings(DEFAULT_SETTINGS);
     setVerified(false);
     setError(null);
     setTunnels([]);
     setActiveHosts(new Set());
     setConnecting(null);
-  };
-
-  const parseHost = (service?: string) => {
-    if (!service) return null;
-    try {
-      const url = service.includes("://") ? new URL(service) : new URL(`ssh://${service}`);
-      return url.host; // keep port if present
-    } catch (e) {
-      console.warn("could not parse service", service, e);
-      return null;
-    }
-  };
-
-  const isHttpProtocol = (service: string) => service.startsWith("http://") || service.startsWith("https://");
-
-  const parseProtocol = (service: string | undefined): string | undefined => {
-    if (!service) return undefined;
-    try {
-      const url = service.includes("://") ? new URL(service) : new URL(`ssh://${service}`);
-      return url.protocol.replace(":", "");
-    } catch {
-      const proto = service.split(":")[0];
-      return proto || undefined;
-    }
-  };
-
-  const pickHostPort = (
-    portMap: Array<{ host: string; port: number; proto?: string }> | undefined,
-    proto?: string,
-    hostname?: string
-  ) => {
-    if (!portMap || !portMap.length) return undefined;
-    if (hostname) {
-      const byHost = portMap.find((p) => p.host === hostname);
-      if (byHost) return byHost;
-    }
-    if (proto) {
-      const match = portMap.find((p) => p.proto === proto);
-      if (match) return match;
-    }
-    return portMap[0];
   };
 
   const loadTunnels = async () => {
@@ -177,67 +80,15 @@ export function useSetup() {
     setTunnelsError(null);
     try {
       const items = await fetchTunnels(settings.apiKey.trim(), settings.accountId);
-      const base: TunnelSummary[] = items.map((t) => {
-        const meta = (t?.metadata as Record<string, unknown>) || {};
-        const rawPort = (meta as any).tunneldashPort ?? (meta as any).tunnelPort ?? (meta as any).port ?? (meta as any).startPort;
-        const portNum = typeof rawPort === "number" ? rawPort : Number(rawPort);
-        const portMapEntries = typeof (meta as any).tunneldashPort === "object" && (meta as any).tunneldashPort !== null
-          ? Object.entries((meta as any).tunneldashPort as Record<string, number | string>)
-              .map(([host, port]) => ({
-                host,
-                port: Number(port),
-                proto: host.split("-")[0] || undefined,
-              }))
-              .filter((p) => Number.isFinite(p.port))
-          : [];
-
-        const firstConn = Array.isArray(t.connections) ? t.connections[0] : undefined;
-        const firstIp = firstConn?.origin_ip;
-        const firstVersion = firstConn?.client_version;
-        const connCount = Array.isArray(t.connections) ? t.connections.length : 0;
-        const coloNames = Array.isArray(t.connections)
-          ? Array.from(new Set(t.connections.map((c) => c?.colo_name).filter(Boolean) as string[]))
-          : [];
-        return {
-          id: t.id,
-          name: t.name,
-          status: t.status,
-          createdAt: t.created_at,
-          port: Number.isFinite(portNum) ? portNum : undefined,
-          metadata: Object.keys(meta).length ? meta : undefined,
-          portMap: portMapEntries.length ? portMapEntries : undefined,
-          connectionIp: firstIp,
-          clientVersion: firstVersion,
-          connectionCount: connCount,
-          coloNames,
-        };
-      });
+      const base: TunnelSummary[] = items.map(toTunnelSummary);
 
       const withConfigs = await Promise.all(
         base.map(async (t) => {
           try {
             const cfgBody = await fetchTunnelConfig(settings.apiKey.trim(), settings.accountId!, t.id);
             const ingress = cfgBody?.result?.config?.ingress;
-            const services = Array.isArray(ingress)
-              ? ingress
-                  .filter((entry) => Boolean(entry?.service) && Boolean((entry as any).hostname))
-                  .map((entry) => ({ service: entry?.service as string, hostname: (entry as any).hostname as string | undefined }))
-                  .filter((svc) => Boolean(svc.service) && !svc.service.startsWith("http_status:"))
-              : [];
-
-            const configs: ConfigInfo[] = services.map((svc) => {
-              const proto = parseProtocol(svc.service);
-              const hostPort = pickHostPort(t.portMap, proto, svc.hostname);
-              return {
-                service: svc.service,
-                proto,
-                host: svc.hostname || hostPort?.host,
-                hostname: svc.hostname,
-                port: hostPort?.port ?? t.port,
-              };
-            });
-
-            const serviceNames = services.map((s) => s.service);
+            const configs = buildConfigsForTunnel(t, ingress);
+            const serviceNames = configs.map((s) => s.service);
             return { ...t, services: serviceNames, service: serviceNames[0], configs };
           } catch {
             console.warn("config fetch failed", { tunnel: t.id });
@@ -316,39 +167,10 @@ export function useSetup() {
     }
   };
 
-  const filteredTunnels = useMemo(() => {
-    return tunnels
-      .map((t) => {
-        const configs = t.configs ?? (t.service ? [{ service: t.service }] : []);
-        const displayConfigs = settings.hideHttp ? configs.filter((c) => !isHttpProtocol(c.service)) : configs;
-        const hiddenHttpCount = Math.max(0, configs.length - displayConfigs.length);
-        const connectConfig = displayConfigs[0] || configs[0];
-        const connectHost = connectConfig ? connectConfig.host || parseHost(connectConfig.service) || undefined : undefined;
-
-        return {
-          ...t,
-          connectionIp: settings.hideIp ? undefined : t.connectionIp,
-          connectService: connectConfig?.service,
-          connectHost,
-          displayConfigs,
-          configs,
-          hiddenHttpCount,
-        } as TunnelSummary;
-      })
-      .filter((t) => {
-        if (settings.hideOffline && t.status) {
-          const s = t.status.toLowerCase();
-          if (s.includes("offline") || s.includes("down")) return false;
-        }
-        return true;
-      })
-      .sort((a, b) => {
-        const aOnline = a.status ? a.status.toLowerCase().includes("healthy") || a.status.toLowerCase().includes("online") : false;
-        const bOnline = b.status ? b.status.toLowerCase().includes("healthy") || b.status.toLowerCase().includes("online") : false;
-        if (aOnline === bOnline) return 0;
-        return aOnline ? -1 : 1;
-      });
-  }, [tunnels, settings.hideOffline, settings.hideHttp, settings.hideIp]);
+  const filteredTunnels = useMemo(
+    () => filterAndSortTunnels(tunnels, settings),
+    [tunnels, settings]
+  );
 
   return {
     settings,
@@ -370,3 +192,5 @@ export function useSetup() {
     cloudflaredVersion,
   };
 }
+
+export type { ConfigInfo, Settings, TunnelSummary } from "./types";

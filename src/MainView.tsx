@@ -1,4 +1,4 @@
-import { TunnelSummary } from "./useSetup";
+import { TunnelSummary } from "./types";
 
 export function MainView({
   accountName,
