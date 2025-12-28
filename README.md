@@ -7,7 +7,7 @@ Related project (Android mobile): https://github.com/maurodruwel/tunneldash. Thi
 ## What it does (quick tour)
 - Setup: pick a starting local port and drop in a Cloudflare token (`Account Settings:Read` + `Cloudflare Tunnel:Read`).
 - Verify: Rust/Tauri calls `GET /accounts`, caches account info in local storage.
-- Tunnels: lists your tunnels, shows connection bits, can hide HTTP entries, and tries to surface the Cloudflared version.
+- Tunnels: lists your tunnels, shows connections and tries to show the Cloudflared version.
 - Connect: for each ingress rule we map host → local port and ask Rust to start/stop `cloudflared` with that mapping.
 - Settings: tweak display, bump the port start, or erase local data.
 
