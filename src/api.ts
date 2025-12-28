@@ -37,8 +37,8 @@ export async function fetchTunnelConfig(token: string, accountId: string, tunnel
   return data || {};
 }
 
-export async function startTunnel(hostname: string, localPort: number) {
-  return invoke("start_tunnel", { hostname, localPort });
+export async function startTunnel(hostname: string, localPort: number, protocol?: string) {
+  return invoke("start_tunnel", { hostname, localPort, protocol });
 }
 
 export async function stopTunnel(hostname: string) {

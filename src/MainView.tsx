@@ -38,12 +38,12 @@ export function MainView({
             <div className="tunnel-row">
               <div>
                 <div className="tunnel-name">{t.name || t.id}</div>
-                <div className="tunnel-meta">{t.id}</div>
+                <div className="tunnel-meta">{t.service || (t.services && t.services[0]) || t.id}</div>
               </div>
               {t.status && <span className="pill-lite">{t.status}</span>}
             </div>
             <div className="tunnel-meta">Created {t.createdAt ? new Date(t.createdAt).toLocaleString() : "Unknown"}</div>
-            <div className="tunnel-meta">Port {t.port ?? "n/a"} · Service {t.service ?? "n/a"}</div>
+            <div className="tunnel-meta">Port {t.port ?? "n/a"} · Service {t.service || (t.services && t.services[0]) || "n/a"}</div>
           </div>
         ))}
       </div>

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useSetup, TunnelSummary, Settings } from "./useSetup";
+import { useSetup, TunnelSummary, Settings, ConfigInfo } from "./useSetup";
 import { SetupScreen } from "./Setup";
 import "./App.css";
 
@@ -130,7 +130,7 @@ function TunnelsScreen({
   loading: boolean;
   error: string | null;
   onRefresh: () => void;
-  onToggle: (t: TunnelSummary) => Promise<void>;
+  onToggle: (t: TunnelSummary, cfg: ConfigInfo) => Promise<void>;
   activeHosts: Set<string>;
   connecting: string | null;
 }) {
@@ -153,14 +153,14 @@ function TunnelsScreen({
 
       <div className="tunnel-list">
         {tunnels.map((t) => {
-          const hostKey = tunnelHostKey(t);
-          const live = activeHosts.has(hostKey);
+          const configs = (t.displayConfigs && t.displayConfigs.length ? t.displayConfigs : t.configs) || [];
+          const hiddenHttp = t.hiddenHttpCount || 0;
           return (
             <div key={t.id} className="tunnel-card">
               <div className="tunnel-row">
                 <div>
                   <div className="tunnel-name">{t.name || t.id}</div>
-                  <div className="tunnel-meta">{t.service || hostKey}</div>
+                  <div className="tunnel-meta">{t.connectService || t.service || t.id}</div>
                 </div>
                 <div className={`badge ${t.status?.toLowerCase().includes("online") ? "online" : "offline"}`}>
                   {t.status || "unknown"}
@@ -170,18 +170,39 @@ function TunnelsScreen({
               <div className="tunnel-meta">Port {t.port ?? "n/a"}</div>
               <div className="tunnel-meta">Created {t.createdAt ? new Date(t.createdAt).toLocaleString() : "Unknown"}</div>
 
-              <div className="tunnel-actions">
-                <button
-                  className={`pill-btn ${live ? "on" : ""}`}
-                  disabled={Boolean(connecting)}
-                  onClick={() => onToggle(t)}
-                >
-                  {connecting === hostKey ? "Working..." : live ? "Disconnect" : "Connect"}
-                </button>
-                <button className="ghost small" onClick={() => navigator.clipboard.writeText(t.service || hostKey)}>
-                  Copy host
-                </button>
-              </div>
+              <div className="tunnel-meta">Configurations</div>
+              {configs.length ? (
+                <div className="config-list">
+                  {configs.map((cfg, idx) => {
+                    const hostKey = cfg.host || tunnelHostKey({ ...t, connectHost: undefined, connectService: cfg.service, service: cfg.service });
+                    const live = hostKey ? activeHosts.has(hostKey) : false;
+                    const localPort = cfg.port ?? t.port ?? "n/a";
+                    const protoLabel = (cfg.proto || "").toUpperCase() || (cfg.service?.split(":")[0] || "").toUpperCase() || "CONFIG";
+                    return (
+                      <div key={`${t.id}-cfg-${idx}`} className="config-row">
+                        <div className="config-info">
+                          <div className="pill-lite">{protoLabel}</div>
+                          {(cfg.host || localPort !== "n/a") && (
+                            <div className="tunnel-meta">{cfg.host ? `${cfg.host}${localPort !== "n/a" ? `:${localPort}` : ""}` : localPort !== "n/a" ? `Port ${localPort}` : ""}</div>
+                          )}
+                        </div>
+                        <div className="tunnel-actions inline">
+                          <button
+                            className={`pill-btn ${live ? "on" : ""}`}
+                            disabled={Boolean(connecting)}
+                            onClick={() => onToggle(t, cfg)}
+                          >
+                            {connecting === hostKey ? "Working..." : live ? "Disconnect" : "Connect"}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="tunnel-meta">No configs</div>
+              )}
+
             </div>
           );
         })}
@@ -308,12 +329,14 @@ function ToggleRow({ label, checked, onChange }: { label: string; checked: boole
 }
 
 function tunnelHostKey(t: TunnelSummary) {
-  if (t.service) {
+  if (t.connectHost) return t.connectHost;
+  const candidate = t.connectService || t.service || (t.services ? t.services[0] : undefined);
+  if (candidate) {
     try {
-      const url = t.service.includes("://") ? new URL(t.service) : new URL(`ssh://${t.service}`);
+      const url = candidate.includes("://") ? new URL(candidate) : new URL(`ssh://${candidate}`);
       return url.host;
     } catch {
-      return t.service;
+      return candidate;
     }
   }
   return t.id;

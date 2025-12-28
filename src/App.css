@@ -75,6 +75,13 @@ input:focus { outline: 2px solid rgba(167, 139, 250, 0.6); }
 .tunnel-row { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
 .tunnel-name { font-weight: 800; font-size: 18px; }
 .tunnel-meta { color: var(--muted); font-size: 13px; }
+.pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0; }
+.pill-lite { padding: 6px 10px; border-radius: 12px; border: 1px solid var(--border); background: var(--card-soft); color: var(--muted); font-size: 13px; }
+.hint { color: var(--muted); font-size: 12px; }
+.config-list { display: flex; flex-direction: column; gap: 10px; margin: 8px 0; }
+.config-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 10px; border: 1px solid var(--border); border-radius: 12px; background: #151722; }
+.config-info { display: flex; flex-direction: column; gap: 6px; min-width: 200px; }
+.tunnel-actions.inline { flex-shrink: 0; display: flex; gap: 8px; align-items: center; }
 
 .badge { padding: 6px 10px; border-radius: 999px; font-weight: 700; font-size: 12px; border: 1px solid var(--border); background: var(--card-soft); text-transform: capitalize; }
 .badge.online { background: rgba(22,163,74,0.14); color: #bbf7d0; border-color: rgba(22,163,74,0.5); }

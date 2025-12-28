@@ -81,7 +81,7 @@ async fn cf_tunnel_config(
 }
 
 #[tauri::command]
-async fn start_tunnel(hostname: String, local_port: u16) -> Result<(), String> {
+async fn start_tunnel(hostname: String, local_port: u16, protocol: Option<String>) -> Result<(), String> {
     let mut active = ACTIVE.lock().unwrap();
 
     if active.contains_key(&hostname) {
@@ -90,10 +90,19 @@ async fn start_tunnel(hostname: String, local_port: u16) -> Result<(), String> {
     }
 
     let url = format!("localhost:{local_port}");
-    let child = Command::new("cloudflared")
-        .args(["access", "tcp", "--hostname", hostname.as_str(), "--url", url.as_str()])
-        .spawn()
-        .map_err(|e| e.to_string())?;
+    let proto = protocol.unwrap_or_else(|| "tcp".into());
+
+    let mut cmd = Command::new("cloudflared");
+    match proto.as_str() {
+        "ssh" => {
+            cmd.args(["access", "ssh", "--hostname", hostname.as_str(), "--url", url.as_str()]);
+        }
+        _ => {
+            cmd.args(["access", "tcp", "--hostname", hostname.as_str(), "--url", url.as_str()]);
+        }
+    }
+
+    let child = cmd.spawn().map_err(|e| e.to_string())?;
 
     active.insert(hostname, child);
     Ok(())
