@@ -4,7 +4,8 @@ import { ConfigInfo, Settings, TunnelSummary } from "./types";
 import { clearStoredSettings, DEFAULT_SETTINGS, loadSettings, persistSettings } from "./utils/settingsStorage";
 import { buildConfigsForTunnel, filterAndSortTunnels, isHttpProtocol, parseHost, parseProtocol, toTunnelSummary } from "./utils/tunnelTransforms";
 
-export function useSetup() {
+// Centralized state and actions for settings, verification, and tunnel control.
+export function useTunnelState() {
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [verified, setVerified] = useState(false);
   const [verifying, setVerifying] = useState(false);
@@ -24,6 +25,7 @@ export function useSetup() {
 
 
   useEffect(() => {
+    // Boot: hydrate settings/token from localStorage so the UI can skip setup if already verified.
     const { settings: loadedSettings, verified: wasVerified } = loadSettings();
     setSettings(loadedSettings);
     setVerified(wasVerified);
@@ -35,6 +37,7 @@ export function useSetup() {
   }, [settings.portStart]);
 
   const save = (patch: Partial<Settings & { verified?: boolean }>) => {
+    // Persist immediately so reloads keep whatever the user just typed.
     const next: Settings = { ...settings, ...patch } as Settings;
     setSettings(next);
     persistSettings(next, patch.verified ?? verified);
@@ -46,6 +49,7 @@ export function useSetup() {
     setVerifying(true);
     setVerified(false);
     try {
+      // Only call the Rust side once; we reuse the first account returned as the selected account.
       const accounts = await fetchAccounts(settings.apiKey.trim());
       if (!accounts.length) throw new Error("No accounts returned");
       const acct = accounts[0];
@@ -87,6 +91,7 @@ export function useSetup() {
           try {
             const cfgBody = await fetchTunnelConfig(settings.apiKey.trim(), settings.accountId!, t.id);
             const ingress = cfgBody?.result?.config?.ingress;
+            // Flatten ingress rules into connectable configs and keep the original tunnel data attached.
             const configs = buildConfigsForTunnel(t, ingress);
             const serviceNames = configs.map((s) => s.service);
             return { ...t, services: serviceNames, service: serviceNames[0], configs };
@@ -142,6 +147,7 @@ export function useSetup() {
 
     const protocol = cfg.proto || parseProtocol(cfg.service) || "tcp";
     const isRunning = activeHosts.has(host);
+    // Track which host is busy so buttons can show a working state per row.
     setConnecting(host);
     setError(null);
     try {

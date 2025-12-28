@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useSetup } from "./useSetup";
+import { useTunnelState } from "./useTunnelState";
 import { SetupScreen } from "./Setup";
 import { SettingsScreen } from "./screens/SettingsScreen.tsx";
 import { TunnelsScreen } from "./screens/TunnelsScreen.tsx";
@@ -26,7 +26,7 @@ function App() {
     connecting,
     isPortValid,
     cloudflaredVersion,
-  } = useSetup();
+  } = useTunnelState();
 
   const [tab, setTab] = useState<Tab>("tunnels");
 
