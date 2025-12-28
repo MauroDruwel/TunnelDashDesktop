@@ -23,6 +23,7 @@ function App() {
     activeHosts,
     connecting,
     isPortValid,
+    cloudflaredVersion,
   } = useSetup();
 
   const [tab, setTab] = useState<Tab>("tunnels");
@@ -97,6 +98,7 @@ function App() {
             setError={setError}
             clearAll={() => clearAll().then(() => setTab("settings"))}
             isPortValid={isPortValid}
+            cloudflaredVersion={cloudflaredVersion}
           />
         )}
       </main>
@@ -154,23 +156,27 @@ function TunnelsScreen({
       <div className="tunnel-list">
         {tunnels.map((t) => {
           const configs = (t.displayConfigs && t.displayConfigs.length ? t.displayConfigs : t.configs) || [];
-          const hiddenHttp = t.hiddenHttpCount || 0;
           return (
             <div key={t.id} className="tunnel-card">
               <div className="tunnel-row">
                 <div>
                   <div className="tunnel-name">{t.name || t.id}</div>
-                  <div className="tunnel-meta">{t.connectService || t.service || t.id}</div>
+                  {(t.coloNames?.length || t.connectionIp) && (
+                    <div className="tunnel-meta">
+                      {t.coloNames?.length ? t.coloNames.join(", ") : ""}
+                      {t.coloNames?.length && t.connectionIp ? " - " : ""}
+                      {t.connectionIp ? t.connectionIp : ""}
+                    </div>
+                  )}
+                  {t.clientVersion && (
+                    <div className="tunnel-meta">Cloudflared: {t.clientVersion}</div>
+                  )}
                 </div>
-                <div className={`badge ${t.status?.toLowerCase().includes("online") ? "online" : "offline"}`}>
+                <div className={`badge ${t.status?.toLowerCase().includes("healthy") || t.status?.toLowerCase().includes("online") ? "online" : "offline"}`}>
                   {t.status || "unknown"}
                 </div>
               </div>
-
-              <div className="tunnel-meta">Port {t.port ?? "n/a"}</div>
-              <div className="tunnel-meta">Created {t.createdAt ? new Date(t.createdAt).toLocaleString() : "Unknown"}</div>
-
-              <div className="tunnel-meta">Configurations</div>
+              <div className="tunnel-meta">Protocols</div>
               {configs.length ? (
                 <div className="config-list">
                   {configs.map((cfg, idx) => {
@@ -221,6 +227,7 @@ function SettingsScreen({
   setError,
   clearAll,
   isPortValid,
+  cloudflaredVersion,
 }: {
   settings: Settings;
   save: (data: Partial<Settings & { verified?: boolean }>) => void;
@@ -231,6 +238,7 @@ function SettingsScreen({
   setError: (v: string | null) => void;
   clearAll: () => Promise<void>;
   isPortValid: boolean;
+  cloudflaredVersion: string | null;
 }) {
   return (
     <div className="stack">
@@ -304,6 +312,7 @@ function SettingsScreen({
           checked={settings.hideOffline}
           onChange={(v) => save({ hideOffline: v })}
         />
+        <p className="muted">Cloudflared version: {cloudflaredVersion || "Not detected yet"}</p>
       </div>
 
       <div className="section danger">

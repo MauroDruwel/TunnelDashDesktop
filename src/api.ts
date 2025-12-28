@@ -6,6 +6,15 @@ export type Tunnel = {
   status?: string;
   created_at?: string;
   metadata?: Record<string, unknown>;
+  connections?: Array<{
+    id?: string;
+    uuid?: string;
+    colo_name?: string;
+    origin_ip?: string;
+    client_version?: string;
+    opened_at?: string;
+    is_pending_reconnect?: boolean;
+  }>;
 };
 
 export type TunnelConfig = {
@@ -35,6 +44,10 @@ export async function fetchTunnels(token: string, accountId: string): Promise<Tu
 export async function fetchTunnelConfig(token: string, accountId: string, tunnelId: string): Promise<TunnelConfig> {
   const data = await invoke<TunnelConfig>("cf_tunnel_config", { token, accountId, tunnelId });
   return data || {};
+}
+
+export async function fetchCloudflaredVersion(): Promise<string> {
+  return invoke<string>("cloudflared_version");
 }
 
 export async function startTunnel(hostname: string, localPort: number, protocol?: string) {

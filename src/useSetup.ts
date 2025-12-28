@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { fetchAccounts, fetchTunnelConfig, fetchTunnels, startTunnel, stopTunnel } from "./api";
+import { fetchAccounts, fetchCloudflaredVersion, fetchTunnelConfig, fetchTunnels, startTunnel, stopTunnel } from "./api";
 
 export type ConfigInfo = {
   service: string;
   proto?: string;
   host?: string;
   port?: number;
+  hostname?: string;
 };
 
 export type TunnelSummary = {
@@ -23,6 +24,10 @@ export type TunnelSummary = {
   connectService?: string;
   connectHost?: string;
   portMap?: Array<{ host: string; port: number; proto?: string }>;
+  connectionIp?: string;
+  clientVersion?: string;
+  connectionCount?: number;
+  coloNames?: string[];
 };
 
 export type Settings = {
@@ -58,6 +63,14 @@ export function useSetup() {
   const [tunnelsError, setTunnelsError] = useState<string | null>(null);
   const [connecting, setConnecting] = useState<string | null>(null);
   const [activeHosts, setActiveHosts] = useState<Set<string>>(new Set());
+  const [cfVersion, setCfVersion] = useState<string | null>(null);
+
+  const cloudflaredVersion = useMemo(() => {
+    if (cfVersion) return cfVersion;
+    const firstWithVersion = tunnels.find((t) => t.clientVersion);
+    return firstWithVersion?.clientVersion || null;
+  }, [cfVersion, tunnels]);
+
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -128,7 +141,7 @@ export function useSetup() {
     }
   };
 
-  const isHttpish = (service: string) => service.startsWith("http://") || service.startsWith("https://");
+  const isHttpProtocol = (service: string) => service.startsWith("http://") || service.startsWith("https://");
 
   const parseProtocol = (service: string | undefined): string | undefined => {
     if (!service) return undefined;
@@ -143,9 +156,14 @@ export function useSetup() {
 
   const pickHostPort = (
     portMap: Array<{ host: string; port: number; proto?: string }> | undefined,
-    proto?: string
+    proto?: string,
+    hostname?: string
   ) => {
     if (!portMap || !portMap.length) return undefined;
+    if (hostname) {
+      const byHost = portMap.find((p) => p.host === hostname);
+      if (byHost) return byHost;
+    }
     if (proto) {
       const match = portMap.find((p) => p.proto === proto);
       if (match) return match;
@@ -172,6 +190,14 @@ export function useSetup() {
               }))
               .filter((p) => Number.isFinite(p.port))
           : [];
+
+        const firstConn = Array.isArray(t.connections) ? t.connections[0] : undefined;
+        const firstIp = firstConn?.origin_ip;
+        const firstVersion = firstConn?.client_version;
+        const connCount = Array.isArray(t.connections) ? t.connections.length : 0;
+        const coloNames = Array.isArray(t.connections)
+          ? Array.from(new Set(t.connections.map((c) => c?.colo_name).filter(Boolean) as string[]))
+          : [];
         return {
           id: t.id,
           name: t.name,
@@ -180,6 +206,10 @@ export function useSetup() {
           port: Number.isFinite(portNum) ? portNum : undefined,
           metadata: Object.keys(meta).length ? meta : undefined,
           portMap: portMapEntries.length ? portMapEntries : undefined,
+          connectionIp: firstIp,
+          clientVersion: firstVersion,
+          connectionCount: connCount,
+          coloNames,
         };
       });
 
@@ -190,22 +220,25 @@ export function useSetup() {
             const ingress = cfgBody?.result?.config?.ingress;
             const services = Array.isArray(ingress)
               ? ingress
-                  .map((entry) => entry?.service)
-                  .filter((svc): svc is string => Boolean(svc) && !svc.startsWith("http_status:"))
+                  .filter((entry) => Boolean(entry?.service) && Boolean((entry as any).hostname))
+                  .map((entry) => ({ service: entry?.service as string, hostname: (entry as any).hostname as string | undefined }))
+                  .filter((svc) => Boolean(svc.service) && !svc.service.startsWith("http_status:"))
               : [];
 
             const configs: ConfigInfo[] = services.map((svc) => {
-              const proto = parseProtocol(svc);
-              const hostPort = pickHostPort(t.portMap, proto);
+              const proto = parseProtocol(svc.service);
+              const hostPort = pickHostPort(t.portMap, proto, svc.hostname);
               return {
-                service: svc,
+                service: svc.service,
                 proto,
-                host: hostPort?.host,
+                host: svc.hostname || hostPort?.host,
+                hostname: svc.hostname,
                 port: hostPort?.port ?? t.port,
               };
             });
 
-            return { ...t, services, service: services[0], configs };
+            const serviceNames = services.map((s) => s.service);
+            return { ...t, services: serviceNames, service: serviceNames[0], configs };
           } catch {
             console.warn("config fetch failed", { tunnel: t.id });
             return t;
@@ -229,14 +262,27 @@ export function useSetup() {
     }
   }, [verified, settings.apiKey, settings.accountId]);
 
+  const loadCloudflaredVersion = async () => {
+    try {
+      const ver = await fetchCloudflaredVersion();
+      setCfVersion(ver || null);
+    } catch (e) {
+      console.warn("cloudflared --version failed", e);
+    }
+  };
+
+  useEffect(() => {
+    loadCloudflaredVersion();
+  }, []);
+
   const toggleTunnel = async (t: TunnelSummary, cfg: ConfigInfo) => {
-    const isHidden = settings.hideHttp && isHttpish(cfg.service);
+    const isHidden = settings.hideHttp && isHttpProtocol(cfg.service);
     if (isHidden) {
       setError("This configuration is hidden by the HTTP/HTTPS filter. Disable the filter to connect.");
       return;
     }
 
-    const host = cfg.host || parseHost(cfg.service) || t.id;
+    const host = cfg.host || cfg.hostname || parseHost(cfg.service) || t.id;
     const localPort = Number(cfg.port ?? t.port ?? settings.portStart);
     if (!Number.isFinite(localPort)) {
       setError("Pick a valid local port before starting a tunnel");
@@ -274,13 +320,14 @@ export function useSetup() {
     return tunnels
       .map((t) => {
         const configs = t.configs ?? (t.service ? [{ service: t.service }] : []);
-        const displayConfigs = settings.hideHttp ? configs.filter((c) => !isHttpish(c.service)) : configs;
+        const displayConfigs = settings.hideHttp ? configs.filter((c) => !isHttpProtocol(c.service)) : configs;
         const hiddenHttpCount = Math.max(0, configs.length - displayConfigs.length);
         const connectConfig = displayConfigs[0] || configs[0];
         const connectHost = connectConfig ? connectConfig.host || parseHost(connectConfig.service) || undefined : undefined;
 
         return {
           ...t,
+          connectionIp: settings.hideIp ? undefined : t.connectionIp,
           connectService: connectConfig?.service,
           connectHost,
           displayConfigs,
@@ -289,10 +336,19 @@ export function useSetup() {
         } as TunnelSummary;
       })
       .filter((t) => {
-        if (settings.hideOffline && t.status && t.status.toLowerCase().includes("offline")) return false;
+        if (settings.hideOffline && t.status) {
+          const s = t.status.toLowerCase();
+          if (s.includes("offline") || s.includes("down")) return false;
+        }
         return true;
+      })
+      .sort((a, b) => {
+        const aOnline = a.status ? a.status.toLowerCase().includes("healthy") || a.status.toLowerCase().includes("online") : false;
+        const bOnline = b.status ? b.status.toLowerCase().includes("healthy") || b.status.toLowerCase().includes("online") : false;
+        if (aOnline === bOnline) return 0;
+        return aOnline ? -1 : 1;
       });
-  }, [tunnels, settings.hideOffline, settings.hideHttp]);
+  }, [tunnels, settings.hideOffline, settings.hideHttp, settings.hideIp]);
 
   return {
     settings,
@@ -311,5 +367,6 @@ export function useSetup() {
     activeHosts,
     connecting,
     isPortValid,
+    cloudflaredVersion,
   };
 }

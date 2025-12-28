@@ -30,11 +30,42 @@ struct Tunnel {
     status: Option<String>,
     created_at: Option<String>,
     metadata: Option<serde_json::Value>,
+    connections: Option<Vec<Connection>>, // include active connections for IP/version info
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Connection {
+    id: Option<String>,
+    uuid: Option<String>,
+    colo_name: Option<String>,
+    origin_ip: Option<String>,
+    client_version: Option<String>,
+    opened_at: Option<String>,
+    is_pending_reconnect: Option<bool>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 struct TunnelConfig {
     result: Option<serde_json::Value>,
+}
+
+#[tauri::command]
+async fn cloudflared_version() -> Result<String, String> {
+    let output = Command::new("cloudflared")
+        .arg("--version")
+        .output()
+        .map_err(|e| e.to_string())?;
+
+    if !output.status.success() {
+        return Err(format!(
+            "cloudflared --version failed: status {}",
+            output.status
+        ));
+    }
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let first_line = stdout.lines().next().unwrap_or("unknown").trim().to_string();
+    Ok(first_line)
 }
 
 // stash running cloudflared child processes so we can stop them later
@@ -92,15 +123,20 @@ async fn start_tunnel(hostname: String, local_port: u16, protocol: Option<String
     let url = format!("localhost:{local_port}");
     let proto = protocol.unwrap_or_else(|| "tcp".into());
 
-    let mut cmd = Command::new("cloudflared");
+    let mut args: Vec<String> = vec!["access".into()];
     match proto.as_str() {
-        "ssh" => {
-            cmd.args(["access", "ssh", "--hostname", hostname.as_str(), "--url", url.as_str()]);
-        }
-        _ => {
-            cmd.args(["access", "tcp", "--hostname", hostname.as_str(), "--url", url.as_str()]);
-        }
+        "ssh" => args.push("ssh".into()),
+        _ => args.push("tcp".into()),
     }
+    args.push("--hostname".into());
+    args.push(hostname.clone());
+    args.push("--url".into());
+    args.push(url.clone());
+
+    eprintln!("[tunneldash] spawning: cloudflared {:?}", args);
+
+    let mut cmd = Command::new("cloudflared");
+    cmd.args(args.iter().map(|s| s.as_str()));
 
     let child = cmd.spawn().map_err(|e| e.to_string())?;
 
@@ -159,6 +195,7 @@ pub fn run() {
             cf_accounts,
             cf_tunnels,
             cf_tunnel_config,
+            cloudflared_version,
             start_tunnel,
             stop_tunnel
         ])
