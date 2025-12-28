@@ -12,6 +12,7 @@ Related project (Android mobile): https://github.com/maurodruwel/tunneldash. Thi
 - Settings: tweak display, bump the port start, or erase local data.
 
 ## Getting started
+Download the binaries from the latest release or manually:
 1) Have pnpm and dependencies installed.
 2) Install deps: `pnpm install`
 3) Run the app: `pnpm tauri dev`
