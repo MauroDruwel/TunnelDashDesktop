@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
 import { useSetup } from "./useSetup";
 import { SetupScreen } from "./Setup";
-import { SettingsScreen } from "./screens/SettingsScreen";
-import { TunnelsScreen } from "./screens/TunnelsScreen";
+import { SettingsScreen } from "./screens/SettingsScreen.tsx";
+import { TunnelsScreen } from "./screens/TunnelsScreen.tsx";
 import "./App.css";
 
 type Tab = "tunnels" | "settings";
