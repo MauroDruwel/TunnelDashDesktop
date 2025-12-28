@@ -1,4 +1,64 @@
-import { ChangeEvent } from "react";
+import { ChangeEvent, useState } from "react";
+import { Settings } from "./useSetup";
+
+export type SetupStep = "welcome" | "port" | "api";
+
+export function SetupScreen({
+  settings,
+  save,
+  verify,
+  verifying,
+  verified,
+  error,
+  setError,
+  isPortValid,
+}: {
+  settings: Settings;
+  save: (data: Partial<Settings & { verified?: boolean }>) => void;
+  verify: () => Promise<void>;
+  verifying: boolean;
+  verified: boolean;
+  error: string | null;
+  setError: (v: string | null) => void;
+  isPortValid: boolean;
+}) {
+  const [setupStep, setSetupStep] = useState<SetupStep>("welcome");
+  const stepIndex = ["welcome", "port", "api"].indexOf(setupStep) + 1;
+
+  if (verified) return null;
+
+  return (
+    <div className="setup-screen">
+      <div className="card setup-card">
+        <div className="progress-text">Step {stepIndex} of 3</div>
+        {setupStep === "welcome" && <WelcomeStep onNext={() => setSetupStep("port")} />}
+        {setupStep === "port" && (
+          <PortStep
+            port={settings.portStart}
+            onChange={(v) => save({ portStart: v })}
+            onBack={() => setSetupStep("welcome")}
+            onNext={() => setSetupStep("api")}
+            valid={isPortValid}
+          />
+        )}
+        {setupStep === "api" && (
+          <ApiStep
+            apiKey={settings.apiKey}
+            onChange={(v) => {
+              setError(null);
+              save({ apiKey: v, verified: false });
+            }}
+            onBack={() => setSetupStep("port")}
+            onVerify={() => verify().then(() => setSetupStep("api"))}
+            verifying={verifying}
+            verified={verified}
+            error={error}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
 
 export function WelcomeStep({ onNext }: { onNext: () => void }) {
   return (
@@ -67,6 +127,7 @@ export function ApiStep({
   verified: boolean;
   error: string | null;
 }) {
+  const [show, setShow] = useState(false);
   return (
     <>
       <p className="eyebrow">Step 3</p>
@@ -74,11 +135,34 @@ export function ApiStep({
       <p className="muted">Token needs Account Settings:Read and Cloudflare Tunnel:Read. We only call GET /accounts.</p>
       <label className="field">
         <span>API token</span>
-        <input
-          type="password"
-          value={apiKey}
-          onChange={(e: ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
-        />
+        <div className="token-input">
+          <input
+            type={show ? "text" : "password"}
+            value={apiKey}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
+          />
+          <button
+            type="button"
+            className="ghost token-toggle"
+            aria-label={show ? "Hide token" : "Show token"}
+            onClick={() => setShow((v) => !v)}
+          >
+            <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              {show ? (
+                <>
+                  <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-5 0-9.27-3.11-11-8 1.03-3 3.17-5.5 5.9-6.88" />
+                  <path d="M1 1l22 22" />
+                  <path d="M9.88 9.88A3 3 0 0 0 12 15a3 3 0 0 0 2.12-.88" />
+                </>
+              ) : (
+                <>
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z" />
+                  <circle cx="12" cy="12" r="3" />
+                </>
+              )}
+            </svg>
+          </button>
+        </div>
       </label>
       {error && <div className="callout error">{error}</div>}
       {verified && <div className="callout ok">Token verified</div>}
