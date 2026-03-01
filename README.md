@@ -1,4 +1,4 @@
-# TunnelDash Desktop
+# TunnelDash Desktop2
 
 Tiny Cloudflare Tunnel sidekick built with React + Tauri. Verify a token, see your tunnels, and flip them on/off without touching the CLI. UI vibe: chunky gradients, high-contrast cards, SlashOS-ish.
 
