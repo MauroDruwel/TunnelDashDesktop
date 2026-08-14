@@ -9,8 +9,7 @@
  */
 
 import { execFileSync } from "node:child_process";
-import { createWriteStream, existsSync, mkdirSync, chmodSync, readFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { createWriteStream, existsSync, mkdirSync, chmodSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { pipeline } from "node:stream/promises";
@@ -63,7 +62,7 @@ async function main() {
 
   console.log(`Downloading cloudflared (${triple}) from ${url}`);
 
-  const temp = join(tmpdir(), `cloudflared-${triple}-${Date.now()}${asset.archive ? ".tgz" : extension}`);
+  const temp = join(binariesDir, `.cloudflared-${triple}-${Date.now()}${asset.archive ? ".tgz" : extension}`);
   const response = await fetch(url);
   if (!response.ok) {
     console.error(`Download failed: HTTP ${response.status} for ${url}`);
