@@ -1,0 +1,86 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  publish:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-latest
+            target: aarch64-apple-darwin
+            args: --target aarch64-apple-darwin
+          - platform: macos-latest
+            target: x86_64-apple-darwin
+            args: --target x86_64-apple-darwin
+          - platform: ubuntu-22.04
+            target: ''
+            args: ''
+          - platform: windows-latest
+            target: ''
+            args: ''
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Add rust target
+        if: matrix.target != ''
+        run: rustup target add ${{ matrix.target }}
+
+      - name: Install system deps (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential pkg-config libayatana-appindicator3-dev librsvg2-dev
+
+      - name: Install app deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Download cloudflared sidecar
+        run: node scripts/download-cloudflared.mjs
+
+      - name: Build and publish to GitHub Releases
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: .
+          tauriScript: pnpm tauri
+          tagName: ${{ github.ref_name }}
+          releaseName: TunnelDash ${{ github.ref_name }}
+          releaseBody: |
+            ## TunnelDash ${{ github.ref_name }}
+
+            Installers for macOS (Apple Silicon + Intel), Windows, and Linux. cloudflared is bundled - no manual install.
+
+            ### Features
+            - Cloudflare tunnels: verify your token, list tunnels, flip them on/off
+            - Built-in SSH terminal: password or private-key auth, resize support
+            - Bundled cloudflared sidecar for every platform
+
+            ### Endpoints Used
+            - `GET /accounts` (Auth check)
+            - `GET /.../cfd_tunnel` (List tunnels)
+            - `GET /.../configurations` (Read ingress rules)
+
+            > Screenshots: see the [README](https://github.com/MauroDruwel/TunnelDashDesktop#-screenshots).
+          prerelease: ${{ contains(github.ref_name, 'pre') || contains(github.ref_name, 'rc') || contains(github.ref_name, 'beta') }}
+          releaseDraft: ${{ !(contains(github.ref_name, 'pre') || contains(github.ref_name, 'rc') || contains(github.ref_name, 'beta')) }}
+          args: ${{ matrix.args }}

@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Downloaded sidecar binaries (regenerate with scripts/download-cloudflared.mjs)
+src-tauri/binaries/

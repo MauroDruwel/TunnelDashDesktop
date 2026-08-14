@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { fetchAccounts, fetchCloudflaredVersion, fetchTunnelConfig, fetchTunnels, startTunnel, stopTunnel } from "./api";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { DEMO_MODE, fetchAccounts, fetchCloudflaredVersion, fetchTunnelConfig, fetchTunnels, startTunnel, stopTunnel } from "./api";
 import { ConfigInfo, Settings, TunnelSummary } from "./types";
 import { clearStoredSettings, DEFAULT_SETTINGS, loadSettings, persistSettings } from "./utils/settingsStorage";
 import { buildConfigsForTunnel, filterAndSortTunnels, isHttpProtocol, parseHost, parseProtocol, toTunnelSummary } from "./utils/tunnelTransforms";
@@ -25,10 +25,25 @@ export function useTunnelState() {
 
 
   useEffect(() => {
-    // Boot: hydrate settings/token from localStorage so the UI can skip setup if already verified.
-    const { settings: loadedSettings, verified: wasVerified } = loadSettings();
-    setSettings(loadedSettings);
-    setVerified(wasVerified);
+    // Boot: hydrate settings/token from storage so the UI can skip setup if already verified.
+    // In demo mode (`?demo`) skip setup unless `?setup` is present, so docs screenshots
+    // can show either the wizard or the verified app.
+    let cancelled = false;
+    loadSettings().then(({ settings: loadedSettings, verified: wasVerified }) => {
+      if (cancelled) return;
+      if (DEMO_MODE) {
+        const showSetup = new URLSearchParams(window.location.search).has("setup");
+        const demo: Settings = { ...loadedSettings, apiKey: "demo-token", accountName: "Demo Corp", accountId: "demo-account" };
+        setSettings(demo);
+        setVerified(!showSetup);
+        return;
+      }
+      setSettings(loadedSettings);
+      setVerified(wasVerified);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const isPortValid = useMemo(() => {
@@ -40,7 +55,7 @@ export function useTunnelState() {
     // Persist immediately so reloads keep whatever the user just typed.
     const next: Settings = { ...settings, ...patch } as Settings;
     setSettings(next);
-    persistSettings(next, patch.verified ?? verified);
+    void persistSettings(next, patch.verified ?? verified);
   };
 
   const verify = async () => {
@@ -69,7 +84,7 @@ export function useTunnelState() {
       await Promise.all(hosts.map((h) => stopTunnel(h).catch(() => undefined)));
     }
 
-    clearStoredSettings();
+    await clearStoredSettings();
     setSettings(DEFAULT_SETTINGS);
     setVerified(false);
     setError(null);
@@ -78,7 +93,7 @@ export function useTunnelState() {
     setConnecting(null);
   };
 
-  const loadTunnels = async () => {
+  const loadTunnels = useCallback(async () => {
     if (!settings.apiKey || !settings.accountId) return;
     setTunnelsLoading(true);
     setTunnelsError(null);
@@ -110,13 +125,13 @@ export function useTunnelState() {
     } finally {
       setTunnelsLoading(false);
     }
-  };
+  }, [settings.apiKey, settings.accountId]);
 
   useEffect(() => {
     if (verified && settings.apiKey && settings.accountId) {
-      loadTunnels();
+      void loadTunnels();
     }
-  }, [verified, settings.apiKey, settings.accountId]);
+  }, [verified, settings.apiKey, settings.accountId, loadTunnels]);
 
   const loadCloudflaredVersion = async () => {
     try {

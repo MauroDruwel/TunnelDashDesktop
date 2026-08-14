@@ -35,4 +35,13 @@ export type Settings = {
   hideHttp: boolean;
   hideIp: boolean;
   hideOffline: boolean;
+  sshLast?: SshPrefs;
+};
+
+export type SshPrefs = {
+  host: string;
+  port: string;
+  username: string;
+  authType: "password" | "key";
+  keyPath: string;
 };

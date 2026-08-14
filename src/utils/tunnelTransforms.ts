@@ -18,6 +18,10 @@ export function isHttpProtocol(service: string): boolean {
 
 export function parseProtocol(service: string | undefined): string | undefined {
   if (!service) return undefined;
+  if (!service.includes("://") && !service.includes("/") && !service.includes(".")) {
+    const bare = service.split(":")[0];
+    return bare || undefined;
+  }
   try {
     const url = service.includes("://") ? new URL(service) : new URL(`ssh://${service}`);
     return url.protocol.replace(":", "");
@@ -45,19 +49,21 @@ export function pickHostPort(
 }
 
 export function toTunnelSummary(t: Tunnel): TunnelSummary {
-  const meta = (t?.metadata as Record<string, unknown>) || {};
-  const rawPort = (meta as any).tunneldashPort ?? (meta as any).tunnelPort ?? (meta as any).port ?? (meta as any).startPort;
+  const meta = (t?.metadata ?? {}) as Record<string, unknown>;
+  const rawPort = meta.tunneldashPort ?? meta.tunnelPort ?? meta.port ?? meta.startPort;
   const portNum = typeof rawPort === "number" ? rawPort : Number(rawPort);
 
-  const portMapEntries = typeof (meta as any).tunneldashPort === "object" && (meta as any).tunneldashPort !== null
-    ? Object.entries((meta as any).tunneldashPort as Record<string, number | string>)
-        .map(([host, port]) => ({
-          host,
-          port: Number(port),
-          proto: host.split("-")[0] || undefined,
-        }))
-        .filter((p) => Number.isFinite(p.port))
-    : [];
+  const tunnelPort = meta.tunneldashPort;
+  const portMapEntries =
+    typeof tunnelPort === "object" && tunnelPort !== null
+      ? Object.entries(tunnelPort as Record<string, number | string>)
+          .map(([host, port]) => ({
+            host,
+            port: Number(port),
+            proto: host.split("-")[0] || undefined,
+          }))
+          .filter((p) => Number.isFinite(p.port))
+      : [];
 
   const firstConn = Array.isArray(t.connections) ? t.connections[0] : undefined;
   const firstIp = firstConn?.origin_ip;
@@ -90,7 +96,10 @@ export function buildConfigsForTunnel(
 
   const services = ingress
     .filter((entry) => Boolean(entry?.service) && Boolean(entry?.hostname))
-    .map((entry) => ({ service: entry?.service as string, hostname: (entry as any).hostname as string | undefined }))
+    .map((entry) => ({
+      service: entry?.service as string,
+      hostname: entry?.hostname as string | undefined,
+    }))
     .filter((svc) => Boolean(svc.service) && !svc.service.startsWith("http_status:"));
 
   return services.map((svc) => {

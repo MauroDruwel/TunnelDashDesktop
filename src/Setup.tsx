@@ -21,7 +21,10 @@ export function SetupScreen({
   setError: (v: string | null) => void;
   isPortValid: boolean;
 }) {
-  const [setupStep, setSetupStep] = useState<SetupStep>("welcome");
+  const [setupStep, setSetupStep] = useState<SetupStep>(() => {
+    const step = new URLSearchParams(window.location.search).get("step");
+    return step === "port" || step === "api" ? step : "welcome";
+  });
   const stepIndex = ["welcome", "port", "api"].indexOf(setupStep) + 1;
 
   if (verified) return null;

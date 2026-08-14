@@ -1,11 +1,21 @@
-import { useMemo, useState } from "react";
+import { lazy, Suspense, useMemo, useState } from "react";
 import { useTunnelState } from "./useTunnelState";
 import { SetupScreen } from "./Setup";
 import { SettingsScreen } from "./screens/SettingsScreen.tsx";
 import { TunnelsScreen } from "./screens/TunnelsScreen.tsx";
+import { CloudIcon, GearIcon, TerminalIcon } from "./components/icons.tsx";
 import "./App.css";
 
-type Tab = "tunnels" | "settings";
+const TerminalScreen = lazy(() =>
+  import("./terminal/TerminalScreen.tsx").then((m) => ({ default: m.TerminalScreen }))
+);
+
+type Tab = "tunnels" | "terminal" | "settings";
+
+function initialTab(): Tab {
+  const tab = new URLSearchParams(window.location.search).get("tab");
+  return tab === "terminal" || tab === "settings" ? tab : "tunnels";
+}
 
 function App() {
   const {
@@ -28,7 +38,7 @@ function App() {
     cloudflaredVersion,
   } = useTunnelState();
 
-  const [tab, setTab] = useState<Tab>("tunnels");
+  const [tab, setTab] = useState<Tab>(initialTab);
 
   const statusLine = useMemo(() => {
     if (!verified) return "Token not verified";
@@ -78,7 +88,7 @@ function App() {
       </header>
 
       <main className="card content">
-        {tab === "tunnels" ? (
+        <div hidden={tab !== "tunnels"}>
           <TunnelsScreen
             accountLine={statusLine}
             tunnels={tunnels}
@@ -89,7 +99,15 @@ function App() {
             activeHosts={activeHosts}
             connecting={connecting}
           />
-        ) : (
+        </div>
+
+        <div hidden={tab !== "terminal"} className="terminal-tab">
+          <Suspense fallback={<div className="callout">Loading terminal...</div>}>
+            <TerminalScreen settings={settings} save={save} />
+          </Suspense>
+        </div>
+
+        <div hidden={tab !== "settings"}>
           <SettingsScreen
             settings={settings}
             save={save}
@@ -102,16 +120,20 @@ function App() {
             isPortValid={isPortValid}
             cloudflaredVersion={cloudflaredVersion}
           />
-        )}
+        </div>
       </main>
 
       <nav className="tabbar">
         <button className={`tab-btn ${tab === "tunnels" ? "active" : ""}`} onClick={() => setTab("tunnels")}>
-          <span>☁️</span>
+          <CloudIcon />
           <small>Tunnels</small>
         </button>
+        <button className={`tab-btn ${tab === "terminal" ? "active" : ""}`} onClick={() => setTab("terminal")}>
+          <TerminalIcon />
+          <small>Terminal</small>
+        </button>
         <button className={`tab-btn ${tab === "settings" ? "active" : ""}`} onClick={() => setTab("settings")}>
-          <span>⚙️</span>
+          <GearIcon />
           <small>Settings</small>
         </button>
       </nav>
