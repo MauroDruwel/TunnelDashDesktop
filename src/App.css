@@ -143,6 +143,16 @@ html, body {
   flex-shrink: 0;
 }
 
+/* macOS overlay title bar: draggable strip above the sidebar header */
+.cf-kumo-sidebar-drag {
+  display: none;
+  flex-shrink: 0;
+}
+html.mac .cf-kumo-sidebar-drag {
+  display: block;
+  height: 52px;
+}
+
 .cf-logo-link {
   display: flex;
   align-items: center;
@@ -428,6 +438,7 @@ html, body {
   overflow-y: auto;
   height: 100vh;
 }
+html.mac .cf-kumo-main { padding-top: 42px; }
 
 .cf-kumo-content-container {
   width: 100%;
@@ -1071,6 +1082,40 @@ html.dark-theme .cf-proto-tag.ssh {
   background: transparent !important;
 }
 
+/* ─── Setup Fullscreen (no sidebar during onboarding) ────────────────────── */
+.cf-setup-fullscreen {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  width: 100vw;
+  position: relative;
+  background-color: var(--kumo-base);
+}
+
+.cf-setup-theme-toggle {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+}
+.cf-setup-theme-toggle button {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--kumo-line);
+  background: var(--kumo-canvas);
+  color: var(--kumo-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.12s ease;
+}
+.cf-setup-theme-toggle button:hover {
+  background: var(--kumo-recessed);
+  color: var(--kumo-label);
+}
+
 /* ─── Setup Stepper ──────────────────────────────────────────────────────── */
 .cf-setup-container {
   display: flex;
@@ -1079,6 +1124,10 @@ html.dark-theme .cf-proto-tag.ssh {
   min-height: calc(100vh - 120px);
   padding: 20px;
   width: 100%;
+}
+
+.cf-setup-fullscreen .cf-setup-container {
+  min-height: 100vh;
 }
 
 .cf-setup-card {

@@ -123,14 +123,39 @@ export function App() {
 
   const accountDisplay =
     settings.accountName ||
-    (settings.accountId ? `Account: ${settings.accountId.slice(0, 8)}…` : "CoderMauro Space");
+    (settings.accountId ? `Account: ${settings.accountId.slice(0, 8)}…` : "Not connected");
+
+  if (!verified) {
+    return (
+      <div className="cf-setup-fullscreen">
+        <div className="cf-setup-theme-toggle">
+          <button type="button" onClick={toggleTheme} title="Toggle theme">
+            {theme === "light" ? <MoonIcon size={16} /> : <SunIcon size={16} />}
+          </button>
+        </div>
+        <SetupScreen
+          settings={settings}
+          save={saveSettings}
+          verify={verifyToken}
+          verifying={verifying}
+          verified={verified}
+          error={error}
+          setError={setError}
+          isPortValid={isPortValid}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="cf-kumo-app">
       {/* ─── Cloudflare Kumo Sidebar (Collapsible) ─── */}
       <aside className={`cf-kumo-sidebar ${sidebarCollapsed ? "collapsed" : ""}`}>
+        {/* macOS: draggable strip under the traffic lights / overlay title bar */}
+        <div className="cf-kumo-sidebar-drag" data-tauri-drag-region />
+
         {/* Header: Flame Logo + Account Switcher + Toggle */}
-        <div className="cf-kumo-sidebar-header">
+        <div className="cf-kumo-sidebar-header" data-tauri-drag-region>
           <a
             href="/"
             className="cf-logo-link"
