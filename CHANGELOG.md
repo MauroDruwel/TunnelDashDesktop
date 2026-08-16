@@ -20,6 +20,7 @@ All notable changes to this project will be documented in this file.
 - cloudflared stdout/stderr now logged to the app log dir for easier debugging.
 
 ### Changed
+- UI restyled with the NIMStats design language: Outfit + JetBrains Mono fonts, NVIDIA-green accent, Google status palette, background glow, blur nav with pill tabs, light/dark theme toggle.
 - Tab bar icons replaced with inline SVGs.
 - App renamed to "TunnelDash" in window title, favicon, and product metadata.
 

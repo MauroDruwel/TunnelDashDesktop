@@ -39,7 +39,7 @@ If you use Cloudflared Tunnels for infrastructure access, you know the pain of t
 | Tunnels | SSH Terminal | Settings |
 |---|---|---|
 | <img width="280" alt="Screenshot" src="https://raw.githubusercontent.com/MauroDruwel/TunnelDashDesktop/main/docs/screenshots/tunnels.png" /> | <img width="280" alt="Screenshot" src="https://raw.githubusercontent.com/MauroDruwel/TunnelDashDesktop/main/docs/screenshots/terminal-connected.png" /> | <img width="280" alt="Screenshot" src="https://raw.githubusercontent.com/MauroDruwel/TunnelDashDesktop/main/docs/screenshots/settings.png" /> |
-|  | <img width="280" alt="Screenshot" src="https://raw.githubusercontent.com/MauroDruwel/TunnelDashDesktop/main/docs/screenshots/terminal.png" /> |  |
+| <img width="280" alt="Screenshot" src="https://raw.githubusercontent.com/MauroDruwel/TunnelDashDesktop/main/docs/screenshots/tunnels-light.png" /> | <img width="280" alt="Screenshot" src="https://raw.githubusercontent.com/MauroDruwel/TunnelDashDesktop/main/docs/screenshots/terminal.png" /> |  |
 
 ### Setup Screenshots
 
