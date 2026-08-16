@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="120" alt="TunnelDash Logo" src="https://raw.githubusercontent.com/MauroDruwel/TunnelDashDesktop/main/public/favicon.svg" />
+  <img width="120" alt="TunnelDash Logo" src="https://raw.githubusercontent.com/MauroDruwel/TunnelDashDesktop/main/public/favicon.png" />
 </p>
 
 <h1 align="center">🕳️ TunnelDash Desktop</h1>
