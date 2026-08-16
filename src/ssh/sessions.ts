@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { DEMO_MODE, sshClose, sshConnect, type SshSessionConfig } from "../api";
+import { errMsg } from "../utils/errors";
 
 export type SshSession = {
   id: number;
@@ -52,7 +53,7 @@ export function useSshSessions() {
       try {
         id = await sshConnect(config);
       } catch (err) {
-        const message = err instanceof Error ? err.message : "SSH connection failed";
+        const message = errMsg(err, "SSH connection failed");
         throw new Error(message);
       }
       const session: SshSession = { id, label, status: "connected" };

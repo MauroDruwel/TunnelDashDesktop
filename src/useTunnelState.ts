@@ -3,6 +3,7 @@ import { DEMO_MODE, fetchAccounts, fetchCloudflaredVersion, fetchTunnelConfig, f
 import { ConfigInfo, Settings, TunnelSummary } from "./types";
 import { clearStoredSettings, DEFAULT_SETTINGS, loadSettings, persistSettings } from "./utils/settingsStorage";
 import { buildConfigsForTunnel, filterAndSortTunnels, isHttpProtocol, parseHost, parseProtocol, toTunnelSummary } from "./utils/tunnelTransforms";
+import { errMsg } from "./utils/errors";
 
 // Centralized state and actions for settings, verification, and tunnel control.
 export function useTunnelState() {
@@ -71,7 +72,7 @@ export function useTunnelState() {
       save({ accountId: acct.id, accountName: acct.name, verified: true });
       setVerified(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Verification failed");
+      setError(errMsg(err, "Verification failed"));
     } finally {
       setVerifying(false);
     }
@@ -120,7 +121,7 @@ export function useTunnelState() {
       setTunnels(withConfigs);
     } catch (err) {
       console.error("load tunnels error", err);
-      setTunnelsError(err instanceof Error ? err.message : "Failed to load tunnels");
+      setTunnelsError(errMsg(err, "Failed to load tunnels"));
       setTunnels([]);
     } finally {
       setTunnelsLoading(false);
@@ -182,7 +183,7 @@ export function useTunnelState() {
         });
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Tunnel toggle failed");
+      setError(errMsg(err, "Tunnel toggle failed"));
     } finally {
       setConnecting(null);
     }
@@ -228,7 +229,7 @@ export function useTunnelState() {
         });
         return command;
       } catch (err) {
-        const message = err instanceof Error ? err.message : "SSH connect failed";
+        const message = errMsg(err, "SSH connect failed");
         setError(message);
         throw new Error(message);
       } finally {
@@ -259,7 +260,7 @@ export function useTunnelState() {
           rows: 30,
         });
       } catch (err) {
-        const message = err instanceof Error ? err.message : "SSH connection failed";
+        const message = errMsg(err, "SSH connection failed");
         setError(message);
         throw new Error(message);
       } finally {
