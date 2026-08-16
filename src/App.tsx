@@ -17,6 +17,7 @@ import {
   ZapIcon,
   PanelLeftIcon,
 } from "./components/icons";
+import appIcon from "./assets/icon.png";
 import type { ConfigInfo, TunnelSummary } from "./types";
 import "./App.css";
 
@@ -61,6 +62,8 @@ export function App() {
   });
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => {
+    const urlCollapsed = new URLSearchParams(window.location.search).get("collapsed");
+    if (urlCollapsed === "1" || urlCollapsed === "true") return true;
     return localStorage.getItem("cf-sidebar-collapsed") === "true";
   });
 
@@ -165,7 +168,11 @@ export function App() {
               setActiveTab("tunnels");
             }}
           >
-            <CloudflareLogo size={sidebarCollapsed ? 30 : 34} />
+            {sidebarCollapsed ? (
+              <img src={appIcon} alt="TunnelDash" className="cf-collapsed-logo" draggable={false} />
+            ) : (
+              <CloudflareLogo size={34} />
+            )}
           </a>
 
           {!sidebarCollapsed && (
@@ -185,7 +192,6 @@ export function App() {
             className="cf-sidebar-toggle-btn"
             title={sidebarCollapsed ? "Expand sidebar (⌘B)" : "Collapse sidebar (⌘B)"}
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            style={{ marginLeft: sidebarCollapsed ? "auto" : undefined }}
           >
             <PanelLeftIcon size={16} />
           </button>

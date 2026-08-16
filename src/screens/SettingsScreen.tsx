@@ -34,15 +34,15 @@ export function SettingsScreen({
 }: SettingsScreenProps) {
   const [showToken, setShowToken] = useState(false);
   const [clearing, setClearing] = useState(false);
+  const [confirming, setConfirming] = useState(false);
 
   const handleClearAll = async () => {
-    if (window.confirm("Are you sure you want to clear all stored credentials, tokens, and active tunnels?")) {
-      setClearing(true);
-      try {
-        await clearAll();
-      } finally {
-        setClearing(false);
-      }
+    setClearing(true);
+    setConfirming(false);
+    try {
+      await clearAll();
+    } finally {
+      setClearing(false);
     }
   };
 
@@ -256,11 +256,24 @@ export function SettingsScreen({
           <span style={{ fontSize: 12, color: "var(--text-muted)" }}>This action cannot be undone.</span>
           <button
             className="btn-cf-danger"
-            onClick={handleClearAll}
+            onClick={() => {
+              if (confirming) {
+                void handleClearAll();
+              } else {
+                setConfirming(true);
+                window.setTimeout(() => setConfirming(false), 4000);
+              }
+            }}
             disabled={clearing}
           >
             <TrashIcon size={13} />
-            <span>{clearing ? "Clearing Data…" : "Clear Stored Data"}</span>
+            <span>
+              {clearing
+                ? "Clearing Data…"
+                : confirming
+                  ? "Click again to confirm"
+                  : "Clear Stored Data"}
+            </span>
           </button>
         </div>
       </div>
