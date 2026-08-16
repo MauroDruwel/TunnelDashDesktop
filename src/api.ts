@@ -129,23 +129,51 @@ export async function stopTunnel(hostname: string) {
   return invoke("stop_tunnel", { hostname });
 }
 
-export type SshAuth =
-  | { type: "password"; password: string }
-  | { type: "key"; keyPath?: string; keyContent?: string; passphrase?: string };
+export type SshCredentialInfo = {
+  username?: string | null;
+  hasPassword: boolean;
+};
 
-export type SshConnectConfig = {
+export type SshOpenRequest = {
   host: string;
   port: number;
-  username: string;
-  auth: SshAuth;
+  username?: string;
+  password?: string;
+  useSaved: boolean;
+};
+
+export async function sshSaveCredential(host: string, username: string, password: string) {
+  if (DEMO_MODE) return;
+  return invoke("ssh_save_credential", { host, username, password });
+}
+
+export async function sshGetCredential(host: string): Promise<SshCredentialInfo> {
+  if (DEMO_MODE)
+    return demoDelay({ username: "demo", hasPassword: true });
+  return invoke<SshCredentialInfo>("ssh_get_credential", { host });
+}
+
+export async function sshDeleteCredential(host: string) {
+  if (DEMO_MODE) return;
+  return invoke("ssh_delete_credential", { host });
+}
+
+export async function sshOpen(request: SshOpenRequest): Promise<string> {
+  if (DEMO_MODE) return demoDelay("ssh -p 50000 demo@localhost");
+  return invoke<string>("ssh_open", { request });
+}
+
+export type SshSessionConfig = {
+  host: string;
+  port: number;
+  username?: string;
+  password?: string;
+  useSaved: boolean;
   cols?: number;
   rows?: number;
 };
 
-export type SshOutput = { id: number; data: string };
-export type SshClosed = { id: number; error?: string | null };
-
-export async function sshConnect(config: SshConnectConfig): Promise<number> {
+export async function sshConnect(config: SshSessionConfig): Promise<number> {
   if (DEMO_MODE) return demoDelay(1);
   return invoke<number>("ssh_connect", { config });
 }

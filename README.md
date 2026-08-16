@@ -31,15 +31,15 @@ If you use Cloudflared Tunnels for infrastructure access, you know the pain of t
 *   **Auto-Discovery:** Reads your tunnel ingress rules to find SSH, TCP, and HTTP services.
 *   **Port Management:** Automatically assigns local ports (starting at 50000).
 *   **One-Click Connect:** Starts/stops `cloudflared` for any ingress rule - no CLI needed.
-*   **Built-in SSH Terminal:** Password or private-key auth, full xterm.js terminal, sessions survive tab switches.
+*   **Termius-style SSH:** Any SSH rule gets its own SSH option - drop in a username/password (saved to the OS keychain) and either open your native terminal or connect through the built-in client.
 *   **Zero Install:** cloudflared is bundled with the app for macOS, Windows, and Linux.
 
 ## 📸 Screenshots
 
-| Tunnels | SSH Terminal | Settings |
+| Tunnels | SSH on a rule | Terminal |
 |---|---|---|
-| <img width="280" alt="Screenshot" src="https://raw.githubusercontent.com/MauroDruwel/TunnelDashDesktop/main/docs/screenshots/tunnels.png" /> | <img width="280" alt="Screenshot" src="https://raw.githubusercontent.com/MauroDruwel/TunnelDashDesktop/main/docs/screenshots/terminal-connected.png" /> | <img width="280" alt="Screenshot" src="https://raw.githubusercontent.com/MauroDruwel/TunnelDashDesktop/main/docs/screenshots/settings.png" /> |
-| <img width="280" alt="Screenshot" src="https://raw.githubusercontent.com/MauroDruwel/TunnelDashDesktop/main/docs/screenshots/tunnels-light.png" /> | <img width="280" alt="Screenshot" src="https://raw.githubusercontent.com/MauroDruwel/TunnelDashDesktop/main/docs/screenshots/terminal.png" /> |  |
+| <img width="280" alt="Screenshot" src="https://raw.githubusercontent.com/MauroDruwel/TunnelDashDesktop/main/docs/screenshots/tunnels.png" /> | <img width="280" alt="Screenshot" src="https://raw.githubusercontent.com/MauroDruwel/TunnelDashDesktop/main/docs/screenshots/tunnels-ssh.png" /> | <img width="280" alt="Screenshot" src="https://raw.githubusercontent.com/MauroDruwel/TunnelDashDesktop/main/docs/screenshots/terminal.png" /> |
+| <img width="280" alt="Screenshot" src="https://raw.githubusercontent.com/MauroDruwel/TunnelDashDesktop/main/docs/screenshots/tunnels-dark.png" /> | <img width="280" alt="Screenshot" src="https://raw.githubusercontent.com/MauroDruwel/TunnelDashDesktop/main/docs/screenshots/settings.png" /> |  |
 
 ### Setup Screenshots
 
@@ -69,6 +69,17 @@ pnpm tauri build
 
 *Note for macOS: building the `.dmg` installer requires the `create-dmg` package (`brew install create-dmg`); the `.app` bundle builds without it.*
 
+## 🗂️ Project structure
+
+- `src/App.tsx` - sidebar shell for tunnels / terminal / settings.
+- `src/useTunnelState.ts` - brains: settings, verification, tunnel fetch, connect/disconnect.
+- `src/screens/` - `TunnelsScreen` (incl. the SSH rule credential form) and `SettingsScreen` UIs.
+- `src/ssh/sessions.ts` - active SSH session management (Termius-style tab list).
+- `src/terminal/` - built-in terminal (`TerminalView` = xterm.js, `TerminalScreen` = session tabs).
+- `src/setup/Steps.tsx` - onboarding steps.
+- `src/utils/` - storage + tunnel transforms (unit-tested).
+- `src-tauri/src/` - Rust side: Cloudflare API calls (`cloudflare.rs`), cloudflared process control (`tunnels.rs`), keychain + native terminal launcher (`ssh.rs`), built-in SSH sessions (`session.rs`).
+
 ### 🔐 API Permissions
 
 You need a generic API token. Go to [Cloudflare Profile > API Tokens > Create Token](https://dash.cloudflare.com/profile/api-tokens) and use the **"Create Custom Token"** template.
@@ -89,13 +100,21 @@ TunnelDash Desktop is a Tauri (Rust) wrapper around the Cloudflare API with a lo
 1.  **Fetch:** It pulls your tunnel list and configurations via the API.
 2.  **Parse:** It looks at ingress rules (e.g., `ssh://localhost:22`) to determine the service type.
 3.  **Map:** It maps each hostname to a local port and lets you start `cloudflared access` with one click.
-4.  **Terminal:** SSH sessions run through a pure-Rust SSH client (russh) wired to an xterm.js terminal.
+4.  **SSH:** SSH rules get a credential form (saved in the OS keychain via the `security` CLI on macOS, Credential Manager / Secret Service elsewhere). From there you can open the connection in your native terminal (password auto-fed via `SSH_ASKPASS`) or connect through the built-in xterm.js client (pure-Rust SSH via russh).
 
 ## 🔌 Endpoints Used
 For those curious about what the app is doing:
 *   `GET /accounts` (Auth check)
 *   `GET /.../cfd_tunnel` (List tunnels)
 *   `GET /.../configurations` (Read ingress rules)
+
+## 📝 Notes
+
+- App-local storage only: token/account stay on your machine except for the Cloudflare API calls.
+- SSH credentials go to the OS keychain - never stored in the app's files.
+- Ports: start from your `portStart` between 1024-65535.
+- Filters: hide HTTP/HTTPS if you only care about SSH/other protocols; can also hide IP info.
+- Host keys are accepted without verification (TOFU is on the roadmap).
 
 ## 🤝 Contributing
 

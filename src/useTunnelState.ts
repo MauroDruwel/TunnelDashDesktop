@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { DEMO_MODE, fetchAccounts, fetchCloudflaredVersion, fetchTunnelConfig, fetchTunnels, startTunnel, stopTunnel } from "./api";
+import { DEMO_MODE, fetchAccounts, fetchCloudflaredVersion, fetchTunnelConfig, fetchTunnels, sshOpen, startTunnel, stopTunnel, type SshSessionConfig } from "./api";
 import { ConfigInfo, Settings, TunnelSummary } from "./types";
 import { clearStoredSettings, DEFAULT_SETTINGS, loadSettings, persistSettings } from "./utils/settingsStorage";
 import { buildConfigsForTunnel, filterAndSortTunnels, isHttpProtocol, parseHost, parseProtocol, toTunnelSummary } from "./utils/tunnelTransforms";
@@ -188,6 +188,87 @@ export function useTunnelState() {
     }
   };
 
+  const ensureTunnelRunning = useCallback(
+    async (t: TunnelSummary, cfg: ConfigInfo): Promise<{ host: string; port: number }> => {
+      const host = cfg.host || cfg.hostname || parseHost(cfg.service) || t.id;
+      const localPort = Number(cfg.port ?? t.port ?? settings.portStart);
+      if (!Number.isFinite(localPort)) {
+        setError("Pick a valid local port before starting a tunnel");
+        throw new Error("invalid port");
+      }
+      if (!activeHosts.has(host)) {
+        await startTunnel(host, localPort, "ssh");
+        setActiveHosts((prev) => {
+          const next = new Set(prev);
+          next.add(host);
+          return next;
+        });
+      }
+      return { host, port: localPort };
+    },
+    [settings.portStart, activeHosts]
+  );
+
+  const connectSsh = useCallback(
+    async (
+      t: TunnelSummary,
+      cfg: ConfigInfo,
+      creds: { username: string; password: string; useSaved: boolean }
+    ): Promise<string> => {
+      setConnecting(t.id);
+      setError(null);
+      try {
+        const { host, port } = await ensureTunnelRunning(t, cfg);
+        const command = await sshOpen({
+          host,
+          port,
+          username: creds.useSaved ? undefined : creds.username || undefined,
+          password: creds.useSaved ? undefined : creds.password || undefined,
+          useSaved: creds.useSaved,
+        });
+        return command;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "SSH connect failed";
+        setError(message);
+        throw new Error(message);
+      } finally {
+        setConnecting(null);
+      }
+    },
+    [ensureTunnelRunning]
+  );
+
+  const startSshSession = useCallback(
+    async (
+      t: TunnelSummary,
+      cfg: ConfigInfo,
+      creds: { username: string; password: string; useSaved: boolean },
+      connect: (config: SshSessionConfig) => Promise<number>
+    ): Promise<number> => {
+      setConnecting(t.id);
+      setError(null);
+      try {
+        const { host, port } = await ensureTunnelRunning(t, cfg);
+        return await connect({
+          host,
+          port,
+          username: creds.useSaved ? undefined : creds.username || undefined,
+          password: creds.useSaved ? undefined : creds.password || undefined,
+          useSaved: creds.useSaved,
+          cols: 100,
+          rows: 30,
+        });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "SSH connection failed";
+        setError(message);
+        throw new Error(message);
+      } finally {
+        setConnecting(null);
+      }
+    },
+    [ensureTunnelRunning]
+  );
+
   const filteredTunnels = useMemo(
     () => filterAndSortTunnels(tunnels, settings),
     [tunnels, settings]
@@ -207,6 +288,8 @@ export function useTunnelState() {
     tunnelsError,
     loadTunnels,
     toggleTunnel,
+    connectSsh,
+    startSshSession,
     activeHosts,
     connecting,
     isPortValid,

@@ -1,21 +1,21 @@
-import { lazy, Suspense, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useTunnelState } from "./useTunnelState";
 import { SetupScreen } from "./Setup";
 import { SettingsScreen } from "./screens/SettingsScreen.tsx";
-import { TunnelsScreen } from "./screens/TunnelsScreen.tsx";
+import { TunnelsScreen, type SshCreds } from "./screens/TunnelsScreen.tsx";
+import { TerminalScreen } from "./terminal/TerminalScreen.tsx";
 import { CloudIcon, GearIcon, TerminalIcon } from "./components/icons.tsx";
+import { useSshSessions } from "./ssh/sessions.ts";
 import { useTheme } from "./theme.ts";
+import type { ConfigInfo, TunnelSummary } from "./types";
 import "./App.css";
-
-const TerminalScreen = lazy(() =>
-  import("./terminal/TerminalScreen.tsx").then((m) => ({ default: m.TerminalScreen }))
-);
 
 type Tab = "tunnels" | "terminal" | "settings";
 
 function initialTab(): Tab {
   const tab = new URLSearchParams(window.location.search).get("tab");
-  return tab === "terminal" || tab === "settings" ? tab : "tunnels";
+  if (tab === "terminal" || tab === "settings") return tab;
+  return "tunnels";
 }
 
 function App() {
@@ -33,6 +33,8 @@ function App() {
     tunnelsError,
     loadTunnels,
     toggleTunnel,
+    connectSsh,
+    startSshSession,
     activeHosts,
     connecting,
     isPortValid,
@@ -41,6 +43,7 @@ function App() {
 
   const [tab, setTab] = useState<Tab>(initialTab);
   const { theme, toggle } = useTheme();
+  const { sessions, activeId, setActiveId, startSession, closeSession } = useSshSessions();
 
   const statusLine = useMemo(() => {
     if (!verified) return "Setup needed";
@@ -48,40 +51,50 @@ function App() {
     return settings.accountName;
   }, [verified, settings.accountName]);
 
+  const handleSshConnect = async (t: TunnelSummary, cfg: ConfigInfo, creds: SshCreds) => {
+    const id = await startSshSession(t, cfg, creds, startSession);
+    setTab("terminal");
+    setActiveId(id);
+  };
+
+  const handleSshOpen = async (t: TunnelSummary, cfg: ConfigInfo, creds: SshCreds) => {
+    return connectSsh(t, cfg, creds);
+  };
+
+  const tabs: Tab[] = ["tunnels", "terminal", "settings"];
+
   return (
     <div className="app-shell">
-      <nav className="topnav">
-        <div className="nav-brand">
-          Tunnel<span>Dash</span>
-        </div>
-        <div className="nav-tabs">
-          {(["tunnels", "terminal", "settings"] as Tab[]).map((t) => (
+      <aside className="sidebar">
+        <div className="sidebar-brand">TunnelDash</div>
+        <div className="sidebar-items">
+          {tabs.map((t) => (
             <button
               key={t}
-              className={`nav-tab ${tab === t && verified ? "active" : ""}`}
+              className={`sidebar-item ${tab === t && verified ? "active" : ""}`}
               onClick={() => verified && setTab(t)}
               disabled={!verified}
             >
-              {t === "tunnels" && <CloudIcon size={14} />}
-              {t === "terminal" && <TerminalIcon size={14} />}
-              {t === "settings" && <GearIcon size={14} />}
+              {t === "tunnels" ? <CloudIcon size={15} /> : t === "terminal" ? <TerminalIcon size={15} /> : <GearIcon size={15} />}
               <span>{t[0].toUpperCase() + t.slice(1)}</span>
             </button>
           ))}
         </div>
-        <div className="nav-status">
-          {verified ? statusLine : "not configured"}
-          {cloudflaredVersion && !verified ? "" : ""}
+        <div className="sidebar-footer">
+          <div className="sidebar-status" title={statusLine}>
+            {verified ? statusLine : "not configured"}
+          </div>
+          <div className="sidebar-meta">cloudflared {cloudflaredVersion || "…"}</div>
+          <button
+            className="theme-toggle"
+            onClick={toggle}
+            title="Toggle theme"
+            aria-label="Toggle theme"
+          >
+            {theme === "dark" ? <SunIcon /> : <MoonIcon />}
+          </button>
         </div>
-        <button
-          className="theme-toggle"
-          onClick={toggle}
-          title="Toggle theme"
-          aria-label="Toggle theme"
-        >
-          {theme === "dark" ? <SunIcon /> : <MoonIcon />}
-        </button>
-      </nav>
+      </aside>
 
       <main>
         {!verified ? (
@@ -105,15 +118,20 @@ function App() {
                 error={tunnelsError || error}
                 onRefresh={loadTunnels}
                 onToggle={toggleTunnel}
+                onSshConnect={handleSshConnect}
+                onSshOpen={handleSshOpen}
                 activeHosts={activeHosts}
                 connecting={connecting}
               />
             </div>
 
             <div hidden={tab !== "terminal"} className="terminal-tab">
-              <Suspense fallback={<div className="callout">Loading terminal...</div>}>
-                <TerminalScreen settings={settings} save={save} />
-              </Suspense>
+              <TerminalScreen
+                sessions={sessions}
+                activeId={activeId}
+                onSelect={setActiveId}
+                onClose={closeSession}
+              />
             </div>
 
             <div hidden={tab !== "settings"}>

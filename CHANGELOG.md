@@ -7,7 +7,9 @@ All notable changes to this project will be documented in this file.
 > First release shipped as a pre-release (`v0.2.0-pre.1`).
 
 ### Added
-- Built-in SSH terminal (xterm.js + russh): password and private key auth, live resize, sessions survive tab switches.
+- SSH on any SSH rule: credential form (username/password) saved to the OS keychain (`security` CLI on macOS, Credential Manager / Secret Service elsewhere), then either open the native terminal (password auto-fed via `SSH_ASKPASS`) or connect through the built-in client.
+- Built-in Termius-style SSH sessions: session tabs + xterm.js terminal, pure-Rust SSH (russh), sessions survive tab switches.
+- Native macOS look: vibrancy, overlay title bar with traffic lights, sidebar navigation, Apple system colors/fonts, light/dark theme.
 - cloudflared is now bundled as a Tauri sidecar for macOS/Windows/Linux - no manual cloudflared install needed (PATH fallback kept for dev).
 - Settings moved from localStorage to the Tauri store plugin (with localStorage fallback for web preview).
 - Linting (ESLint + typescript-eslint), unit tests (vitest + Rust tests), and `typecheck` script.
@@ -20,7 +22,7 @@ All notable changes to this project will be documented in this file.
 - cloudflared stdout/stderr now logged to the app log dir for easier debugging.
 
 ### Changed
-- UI restyled with the NIMStats design language: Outfit + JetBrains Mono fonts, NVIDIA-green accent, Google status palette, background glow, blur nav with pill tabs, light/dark theme toggle.
+- UI restyled to a native macOS look: system fonts, Apple blue accent, sidebar navigation, vibrancy, light-by-default theme.
 - Tab bar icons replaced with inline SVGs.
 - App renamed to "TunnelDash" in window title, favicon, and product metadata.
 

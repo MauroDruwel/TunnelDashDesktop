@@ -13,15 +13,17 @@
     "windows": [
       {
         "title": "TunnelDash",
-        "width": 880,
-        "height": 660,
-        "minWidth": 640,
-        "minHeight": 480,
-        "resizable": true
+        "width": 1080,
+        "height": 700,
+        "minWidth": 760,
+        "minHeight": 520,
+        "resizable": true,
+        "transparent": true,
+        "titleBarStyle": "Overlay"
       }
     ],
     "security": {
-      "csp": "default-src 'self'; connect-src 'self' ipc: http://ipc.localhost; img-src 'self' data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com"
+      "csp": "default-src 'self'; connect-src 'self' ipc: http://ipc.localhost; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:"
     }
   },
   "bundle": {
