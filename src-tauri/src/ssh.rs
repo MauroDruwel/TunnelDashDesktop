@@ -3,7 +3,7 @@ use base64::Engine;
 use once_cell::sync::Lazy;
 use russh::client::{self, Handle};
 use russh::keys::PrivateKeyWithHashAlg;
-use russh::{Channel, ChannelMsg, Disconnect};
+use russh::{Channel, ChannelMsg};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -134,36 +134,9 @@ async fn run_session(
     config: SshConnectConfig,
     mut rx: mpsc::Receiver<SshCommand>,
 ) -> Result<(), String> {
-    let client_config = Arc::new(client::Config {
-        keepalive_interval: Some(Duration::from_secs(30)),
-        keepalive_max: 3,
-        ..client::Config::default()
-    });
-
-    let mut session = client::connect(client_config, (&config.host[..], config.port), SshHandler)
-        .await
-        .map_err(|e| format!("ssh connect failed: {e}"))?;
-
-    authenticate(&mut session, &config).await?;
-
-    let channel = session
-        .channel_open_session()
-        .await
-        .map_err(|e| format!("channel open failed: {e}"))?;
-
-    let cols = config.cols.unwrap_or(80).max(20);
-    let rows = config.rows.unwrap_or(24).max(5);
-
-    channel
-        .request_pty(true, "xterm-256color", cols, rows, 0, 0, &[])
-        .await
-        .map_err(|e| format!("pty request failed: {e}"))?;
-    channel
-        .request_shell(true)
-        .await
-        .map_err(|e| format!("shell request failed: {e}"))?;
-
-    let channel = Arc::new(tokio::sync::Mutex::new(channel));
+    let channel = Arc::new(tokio::sync::Mutex::new(
+        connect_and_open_shell(&config).await?,
+    ));
 
     loop {
         tokio::select! {
@@ -191,10 +164,42 @@ async fn run_session(
         }
     }
 
-    let _ = session
-        .disconnect(Disconnect::ByApplication, "closed", "English")
-        .await;
     Ok(())
+}
+
+pub(crate) async fn connect_and_open_shell(
+    config: &SshConnectConfig,
+) -> Result<Channel<russh::client::Msg>, String> {
+    let client_config = Arc::new(client::Config {
+        keepalive_interval: Some(Duration::from_secs(30)),
+        keepalive_max: 3,
+        ..client::Config::default()
+    });
+
+    let mut session = client::connect(client_config, (&config.host[..], config.port), SshHandler)
+        .await
+        .map_err(|e| format!("ssh connect failed: {e}"))?;
+
+    authenticate(&mut session, config).await?;
+
+    let channel = session
+        .channel_open_session()
+        .await
+        .map_err(|e| format!("channel open failed: {e}"))?;
+
+    let cols = config.cols.unwrap_or(80).max(20);
+    let rows = config.rows.unwrap_or(24).max(5);
+
+    channel
+        .request_pty(true, "xterm-256color", cols, rows, 0, 0, &[])
+        .await
+        .map_err(|e| format!("pty request failed: {e}"))?;
+    channel
+        .request_shell(true)
+        .await
+        .map_err(|e| format!("shell request failed: {e}"))?;
+
+    Ok(channel)
 }
 
 async fn channel_next(
@@ -268,4 +273,89 @@ fn emit_output(app: &AppHandle, id: u64, data: &[u8]) {
             data: B64.encode(data),
         },
     );
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    async fn read_until<F: Fn(&str) -> bool>(
+        channel: &mut Channel<russh::client::Msg>,
+        predicate: F,
+        timeout: Duration,
+    ) -> String {
+        let mut buffer = String::new();
+        let deadline = tokio::time::Instant::now() + timeout;
+        loop {
+            let remaining = deadline.saturating_duration_since(tokio::time::Instant::now());
+            if remaining.is_zero() {
+                break;
+            }
+            match tokio::time::timeout(remaining, channel.wait()).await {
+                Ok(Some(ChannelMsg::Data { data })) => {
+                    buffer.push_str(&String::from_utf8_lossy(&data));
+                    if predicate(&buffer) {
+                        break;
+                    }
+                }
+                Ok(Some(ChannelMsg::Eof)) | Ok(Some(ChannelMsg::Close)) | Ok(None) => break,
+                Ok(_) => {}
+                Err(_) => break,
+            }
+        }
+        buffer
+    }
+
+    #[tokio::test]
+    #[ignore = "requires network access to a public SSH server"]
+    async fn ssh_shell_roundtrip_against_live_server() {
+        let config = SshConnectConfig {
+            host: "test.rebex.net".into(),
+            port: 22,
+            username: "demo".into(),
+            auth: SshAuth::Password {
+                password: "password".into(),
+            },
+            cols: Some(80),
+            rows: Some(24),
+        };
+
+        let mut channel = connect_and_open_shell(&config)
+            .await
+            .expect("connect, auth, pty and shell should succeed");
+
+        let banner = read_until(
+            &mut channel,
+            |buf| buf.contains("$"),
+            Duration::from_secs(20),
+        )
+        .await;
+        assert!(
+            banner.contains("$"),
+            "expected a shell prompt, got: {banner:?}"
+        );
+
+        let bytes = b"echo tunneldash-e2e-ok; echo DONE\n";
+        channel
+            .data(&mut &bytes[..])
+            .await
+            .expect("command write should succeed");
+
+        let output = read_until(
+            &mut channel,
+            |buf| buf.contains("DONE"),
+            Duration::from_secs(20),
+        )
+        .await;
+        assert!(
+            output.contains("tunneldash-e2e-ok") && output.contains("DONE"),
+            "expected command echo + output, got: {output:?}"
+        );
+
+        channel
+            .window_change(100, 40, 0, 0)
+            .await
+            .expect("resize should succeed");
+        channel.eof().await.expect("eof should succeed");
+    }
 }
