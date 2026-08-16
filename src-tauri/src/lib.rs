@@ -5,14 +5,14 @@ mod tunnels;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let mut builder = tauri::Builder::default().plugin(tauri_plugin_store::Builder::new().build());
+    let builder = tauri::Builder::default().plugin(tauri_plugin_store::Builder::new().build());
 
     #[cfg(target_os = "macos")]
-    {
+    let builder = {
         use tauri::Manager;
         use window_vibrancy::{apply_vibrancy, NSVisualEffectMaterial, NSVisualEffectState};
 
-        builder = builder.setup(|app| {
+        builder.setup(|app| {
             let window = app.get_webview_window("main").expect("main window missing");
             apply_vibrancy(
                 &window,
@@ -22,8 +22,8 @@ pub fn run() {
             )
             .expect("failed to apply vibrancy");
             Ok(())
-        });
-    }
+        })
+    };
 
     builder
         .invoke_handler(tauri::generate_handler![

@@ -233,16 +233,16 @@ fn launch_in_terminal(
     #[cfg(all(unix, not(target_os = "macos")))]
     {
         let askpass = write_askpass_helper(cache_dir, password)?;
-        let terminal = std::env::var("TERMINAL")
-            .or_else(|_| {
-                Command::new("which")
-                    .arg("x-terminal-emulator")
-                    .output()
-                    .ok()
-                    .filter(|o| o.status.success())
-                    .map(|_| "x-terminal-emulator".to_string())
-            })
-            .map_err(|_| "no terminal emulator found".to_string())?;
+        let terminal = match std::env::var("TERMINAL") {
+            Ok(t) => t,
+            Err(_) => Command::new("which")
+                .arg("x-terminal-emulator")
+                .output()
+                .ok()
+                .filter(|o| o.status.success())
+                .map(|_| "x-terminal-emulator".to_string())
+                .ok_or_else(|| "no terminal emulator found".to_string())?,
+        };
 
         Command::new(&terminal)
             .arg("-e")
