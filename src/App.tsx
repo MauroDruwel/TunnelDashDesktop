@@ -1,39 +1,40 @@
-import { useMemo, useState } from "react";
+import { useState, useEffect } from "react";
 import { useTunnelState } from "./useTunnelState";
+import { useSshSessions } from "./ssh/sessions";
 import { SetupScreen } from "./Setup";
-import { SettingsScreen } from "./screens/SettingsScreen.tsx";
-import { TunnelsScreen, type SshCreds } from "./screens/TunnelsScreen.tsx";
-import { TerminalScreen } from "./terminal/TerminalScreen.tsx";
-import { CloudIcon, GearIcon, TerminalIcon } from "./components/icons.tsx";
-import { useSshSessions } from "./ssh/sessions.ts";
-import { useTheme } from "./theme.ts";
+import { TunnelsScreen } from "./screens/TunnelsScreen";
+import { SettingsScreen } from "./screens/SettingsScreen";
+import { TerminalScreen } from "./terminal/TerminalScreen";
+import {
+  CloudflareLogo,
+  CaretUpDownIcon,
+  SearchIcon,
+  CloudIcon,
+  TerminalIcon,
+  GearIcon,
+  SunIcon,
+  MoonIcon,
+  ZapIcon,
+  PanelLeftIcon,
+} from "./components/icons";
 import type { ConfigInfo, TunnelSummary } from "./types";
 import "./App.css";
 
-type Tab = "tunnels" | "terminal" | "settings";
-
-function initialTab(): Tab {
-  const tab = new URLSearchParams(window.location.search).get("tab");
-  if (tab === "terminal" || tab === "settings") return tab;
-  return "tunnels";
-}
-
-function App() {
+export function App() {
   const {
     settings,
-    save,
+    save: saveSettings,
     verified,
     verifying,
-    verify,
+    verify: verifyToken,
     error,
     setError,
-    clearAll,
+    clearAll: clearAllData,
     tunnels,
     tunnelsLoading,
     tunnelsError,
     loadTunnels,
     toggleTunnel,
-    connectSsh,
     startSshSession,
     activeHosts,
     connecting,
@@ -41,141 +42,289 @@ function App() {
     cloudflaredVersion,
   } = useTunnelState();
 
-  const [tab, setTab] = useState<Tab>(initialTab);
-  const { theme, toggle } = useTheme();
-  const { sessions, activeId, setActiveId, startSession, closeSession } = useSshSessions();
+  const {
+    sessions: sshSessions,
+    activeId: activeSessionId,
+    setActiveId: setActiveSessionId,
+    startSession,
+    closeSession: closeSshSession,
+  } = useSshSessions();
 
-  const statusLine = useMemo(() => {
-    if (!verified) return "Setup needed";
-    if (!settings.accountName) return "Account unknown";
-    return settings.accountName;
-  }, [verified, settings.accountName]);
+  const [activeTab, setActiveTab] = useState<"tunnels" | "terminal" | "settings">(() => {
+    const t = new URLSearchParams(window.location.search).get("tab");
+    return t === "terminal" || t === "settings" ? t : "tunnels";
+  });
+  const [theme, setTheme] = useState<"light" | "dark">(() => {
+    const urlTheme = new URLSearchParams(window.location.search).get("theme");
+    if (urlTheme === "light" || urlTheme === "dark") return urlTheme;
+    return (localStorage.getItem("cf-theme") as "light" | "dark") || "light";
+  });
 
-  const handleSshConnect = async (t: TunnelSummary, cfg: ConfigInfo, creds: SshCreds) => {
-    const id = await startSshSession(t, cfg, creds, startSession);
-    setTab("terminal");
-    setActiveId(id);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => {
+    return localStorage.getItem("cf-sidebar-collapsed") === "true";
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark-theme", theme === "dark");
+    localStorage.setItem("cf-theme", theme);
+  }, [theme]);
+
+  useEffect(() => {
+    localStorage.setItem("cf-sidebar-collapsed", String(sidebarCollapsed));
+  }, [sidebarCollapsed]);
+
+  // Handle Cmd+K for quick search and Cmd+B or '[' to toggle sidebar
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        const searchInput = document.querySelector(".cf-search-input") as HTMLInputElement;
+        if (searchInput) {
+          searchInput.focus();
+        }
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "b") {
+        e.preventDefault();
+        setSidebarCollapsed((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  // When a new SSH session is launched, jump directly to Terminal tab
+  useEffect(() => {
+    if (sshSessions.length > 0 && activeSessionId !== null) {
+      setActiveTab("terminal");
+    }
+  }, [sshSessions.length, activeSessionId]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === "light" ? "dark" : "light"));
   };
 
-  const handleSshOpen = async (t: TunnelSummary, cfg: ConfigInfo, creds: SshCreds) => {
-    return connectSsh(t, cfg, creds);
+  const handleStartSshWeb = async (
+    tunnel: TunnelSummary,
+    cfg: ConfigInfo,
+    creds: { username: string; password: string }
+  ) => {
+    try {
+      await startSshSession(
+        tunnel,
+        cfg,
+        { username: creds.username, password: creds.password, useSaved: false },
+        startSession
+      );
+      setActiveTab("terminal");
+    } catch {
+      // Error handled in useTunnelState
+    }
   };
 
-  const tabs: Tab[] = ["tunnels", "terminal", "settings"];
+  const accountDisplay =
+    settings.accountName ||
+    (settings.accountId ? `Account: ${settings.accountId.slice(0, 8)}…` : "CoderMauro Space");
 
   return (
-    <div className="app-shell">
-      <aside className="sidebar">
-        <div className="sidebar-brand">TunnelDash</div>
-        <div className="sidebar-items">
-          {tabs.map((t) => (
-            <button
-              key={t}
-              className={`sidebar-item ${tab === t && verified ? "active" : ""}`}
-              onClick={() => verified && setTab(t)}
-              disabled={!verified}
-            >
-              {t === "tunnels" ? <CloudIcon size={15} /> : t === "terminal" ? <TerminalIcon size={15} /> : <GearIcon size={15} />}
-              <span>{t[0].toUpperCase() + t.slice(1)}</span>
-            </button>
-          ))}
-        </div>
-        <div className="sidebar-footer">
-          <div className="sidebar-status" title={statusLine}>
-            {verified ? statusLine : "not configured"}
-          </div>
-          <div className="sidebar-meta">cloudflared {cloudflaredVersion || "…"}</div>
-          <button
-            className="theme-toggle"
-            onClick={toggle}
-            title="Toggle theme"
-            aria-label="Toggle theme"
+    <div className="cf-kumo-app">
+      {/* ─── Cloudflare Kumo Sidebar (Collapsible) ─── */}
+      <aside className={`cf-kumo-sidebar ${sidebarCollapsed ? "collapsed" : ""}`}>
+        {/* Header: Flame Logo + Account Switcher + Toggle */}
+        <div className="cf-kumo-sidebar-header">
+          <a
+            href="/"
+            className="cf-logo-link"
+            title="Cloudflare Dashboard"
+            onClick={(e) => {
+              e.preventDefault();
+              setActiveTab("tunnels");
+            }}
           >
-            {theme === "dark" ? <SunIcon /> : <MoonIcon />}
+            <CloudflareLogo size={sidebarCollapsed ? 30 : 34} />
+          </a>
+
+          {!sidebarCollapsed && (
+            <button
+              type="button"
+              className="cf-account-switcher-btn"
+              title={accountDisplay}
+              onClick={() => setActiveTab("settings")}
+            >
+              <span className="cf-account-title">{accountDisplay}</span>
+              <CaretUpDownIcon size={14} className="cf-account-caret" />
+            </button>
+          )}
+
+          <button
+            type="button"
+            className="cf-sidebar-toggle-btn"
+            title={sidebarCollapsed ? "Expand sidebar (⌘B)" : "Collapse sidebar (⌘B)"}
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            style={{ marginLeft: sidebarCollapsed ? "auto" : undefined }}
+          >
+            <PanelLeftIcon size={16} />
+          </button>
+        </div>
+
+        {/* Sidebar Body */}
+        <div className="cf-kumo-sidebar-body">
+          {/* Quick Search trigger button */}
+          <button
+            type="button"
+            className="cf-quick-search-btn"
+            title="Quick search (⌘K)"
+            onClick={() => {
+              if (sidebarCollapsed) {
+                setSidebarCollapsed(false);
+              }
+              setTimeout(() => {
+                const searchInput = document.querySelector(".cf-search-input") as HTMLInputElement;
+                if (searchInput) searchInput.focus();
+              }, 100);
+            }}
+          >
+            <SearchIcon size={14} />
+            <span>Quick search...</span>
+            <kbd className="cf-quick-search-kbd">⌘K</kbd>
+          </button>
+
+          {/* Navigation Items */}
+          <ul className="cf-kumo-menu">
+            <li>
+              <button
+                type="button"
+                className={`cf-kumo-menu-link ${activeTab === "tunnels" ? "active" : ""}`}
+                onClick={() => setActiveTab("tunnels")}
+                disabled={!verified}
+                title="Tunnels"
+              >
+                <span className="cf-kumo-menu-link-inner">
+                  <span className="cf-kumo-menu-icon">
+                    <CloudIcon size={16} />
+                  </span>
+                  <span>Tunnels</span>
+                </span>
+                {tunnels.length > 0 && (
+                  <span className="cf-kumo-badge">{tunnels.length}</span>
+                )}
+              </button>
+            </li>
+
+            <li>
+              <button
+                type="button"
+                className={`cf-kumo-menu-link ${activeTab === "terminal" ? "active" : ""}`}
+                onClick={() => setActiveTab("terminal")}
+                title="SSH Terminal Console"
+              >
+                <span className="cf-kumo-menu-link-inner">
+                  <span className="cf-kumo-menu-icon">
+                    <TerminalIcon size={16} />
+                  </span>
+                  <span>SSH Terminal</span>
+                </span>
+                {sshSessions.length > 0 && (
+                  <span className="cf-kumo-badge">{sshSessions.length}</span>
+                )}
+              </button>
+            </li>
+
+            <li>
+              <button
+                type="button"
+                className={`cf-kumo-menu-link ${activeTab === "settings" ? "active" : ""}`}
+                onClick={() => setActiveTab("settings")}
+                title="Settings & Access"
+              >
+                <span className="cf-kumo-menu-link-inner">
+                  <span className="cf-kumo-menu-icon">
+                    <GearIcon size={16} />
+                  </span>
+                  <span>Settings & Access</span>
+                </span>
+              </button>
+            </li>
+          </ul>
+        </div>
+
+        {/* Sidebar Footer */}
+        <div className="cf-kumo-sidebar-footer">
+          <div
+            style={{ display: "flex", alignItems: "center", gap: 6 }}
+            title={cloudflaredVersion ? `cloudflared ${cloudflaredVersion}` : "cloudflared ready"}
+          >
+            <ZapIcon
+              size={13}
+              style={{
+                color: activeHosts.size > 0 ? "var(--cf-green-5)" : "var(--kumo-subtle)",
+              }}
+            />
+            <span className="cf-daemon-text" style={{ fontSize: 11.5 }}>
+              {cloudflaredVersion ? `cloudflared ${cloudflaredVersion}` : "cloudflared ready"}
+            </span>
+          </div>
+
+          <button
+            type="button"
+            className="cf-theme-toggle-btn"
+            onClick={toggleTheme}
+            title={theme === "light" ? "Switch to Dark Mode" : "Switch to Light Mode"}
+          >
+            {theme === "light" ? <MoonIcon size={14} /> : <SunIcon size={14} />}
           </button>
         </div>
       </aside>
 
-      <main>
-        {!verified ? (
-          <SetupScreen
-            settings={settings}
-            save={save}
-            verify={verify}
-            verifying={verifying}
-            verified={verified}
-            error={error}
-            setError={setError}
-            isPortValid={isPortValid}
-          />
-        ) : (
-          <>
-            <div hidden={tab !== "tunnels"}>
-              <TunnelsScreen
-                accountLine={statusLine}
-                tunnels={tunnels}
-                loading={tunnelsLoading}
-                error={tunnelsError || error}
-                onRefresh={loadTunnels}
-                onToggle={toggleTunnel}
-                onSshConnect={handleSshConnect}
-                onSshOpen={handleSshOpen}
-                activeHosts={activeHosts}
-                connecting={connecting}
-              />
-            </div>
-
-            <div hidden={tab !== "terminal"} className="terminal-tab">
-              <TerminalScreen
-                sessions={sessions}
-                activeId={activeId}
-                onSelect={setActiveId}
-                onClose={closeSession}
-              />
-            </div>
-
-            <div hidden={tab !== "settings"}>
-              <SettingsScreen
-                settings={settings}
-                save={save}
-                verify={verify}
-                verifying={verifying}
-                verified={verified}
-                error={error}
-                setError={setError}
-                clearAll={() => clearAll().then(() => setTab("settings"))}
-                isPortValid={isPortValid}
-                cloudflaredVersion={cloudflaredVersion}
-              />
-            </div>
-          </>
-        )}
+      {/* ─── Main Content Area (Full Resolution) ─── */}
+      <main className="cf-kumo-main">
+        <div className="cf-kumo-content-container">
+          {!verified ? (
+            <SetupScreen
+              settings={settings}
+              save={saveSettings}
+              verify={verifyToken}
+              verifying={verifying}
+              verified={verified}
+              error={error}
+              setError={setError}
+              isPortValid={isPortValid}
+            />
+          ) : activeTab === "tunnels" ? (
+            <TunnelsScreen
+              tunnels={tunnels}
+              loading={tunnelsLoading}
+              error={tunnelsError || error}
+              refresh={loadTunnels}
+              toggleTunnel={toggleTunnel}
+              activeHosts={activeHosts}
+              connecting={connecting}
+              onStartSshWeb={handleStartSshWeb}
+              settings={settings}
+            />
+          ) : activeTab === "terminal" ? (
+            <TerminalScreen
+              sessions={sshSessions}
+              activeId={activeSessionId}
+              onSelect={setActiveSessionId}
+              onClose={closeSshSession}
+            />
+          ) : (
+            <SettingsScreen
+              settings={settings}
+              save={saveSettings}
+              verify={verifyToken}
+              verifying={verifying}
+              verified={verified}
+              error={error}
+              setError={setError}
+              clearAll={clearAllData}
+              isPortValid={isPortValid}
+              cloudflaredVersion={cloudflaredVersion}
+            />
+          )}
+        </div>
       </main>
     </div>
-  );
-}
-
-function SunIcon() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="12" cy="12" r="4" />
-      <line x1="12" y1="2" x2="12" y2="4" />
-      <line x1="12" y1="20" x2="12" y2="22" />
-      <line x1="4.93" y1="4.93" x2="6.34" y2="6.34" />
-      <line x1="17.66" y1="17.66" x2="19.07" y2="19.07" />
-      <line x1="2" y1="12" x2="4" y2="12" />
-      <line x1="20" y1="12" x2="22" y2="12" />
-      <line x1="4.93" y1="19.07" x2="6.34" y2="17.66" />
-      <line x1="17.66" y1="6.34" x2="19.07" y2="4.93" />
-    </svg>
-  );
-}
-
-function MoonIcon() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-    </svg>
   );
 }
 

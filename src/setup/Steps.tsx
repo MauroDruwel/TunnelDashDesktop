@@ -1,15 +1,42 @@
 import { ChangeEvent, useState } from "react";
+import { EyeIcon, EyeOffIcon } from "../components/icons";
 
 export type SetupStep = "welcome" | "port" | "api";
 
 export function WelcomeStep({ onNext }: { onNext: () => void }) {
   return (
     <>
-      <p className="eyebrow">Step 1</p>
-      <h1>Welcome</h1>
-      <p className="muted">Store a start port and a Cloudflare token locally. You can redo this anytime.</p>
-      <div className="actions">
-        <button className="primary" onClick={onNext}>Continue →</button>
+      <div>
+        <h2 style={{ fontSize: 18, fontWeight: 600, color: "var(--text-main)" }}>
+          Welcome to TunnelDash
+        </h2>
+        <p style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 4 }}>
+          Connect and proxy your Cloudflare Tunnels and SSH endpoints directly to local ports on this machine.
+        </p>
+      </div>
+
+      <div
+        style={{
+          background: "var(--surface-secondary)",
+          border: "1px solid var(--border)",
+          borderRadius: 4,
+          padding: 12,
+          fontSize: 12.5,
+          color: "var(--text-secondary)",
+          display: "flex",
+          flexDirection: "column",
+          gap: 6,
+        }}
+      >
+        <div>• Real-time tunnel status & edge datacenter monitoring</div>
+        <div>• Local port binding & proxying to edge ingress routes</div>
+        <div>• Integrated web SSH terminal with credential storage</div>
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 6 }}>
+        <button className="btn-cf-primary" onClick={onNext}>
+          Get Started →
+        </button>
       </div>
     </>
   );
@@ -30,23 +57,40 @@ export function PortStep({
 }) {
   return (
     <>
-      <p className="eyebrow">Step 2</p>
-      <h1>Port range</h1>
-      <p className="muted">Default 50000. Must be between 1024 and 65535.</p>
-      <label className="field">
-        <span>Starting port</span>
+      <div>
+        <h2 style={{ fontSize: 18, fontWeight: 600, color: "var(--text-main)" }}>
+          Local Port Allocation
+        </h2>
+        <p style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 4 }}>
+          Specify the starting port number for local tunnel bindings.
+        </p>
+      </div>
+
+      <div className="cf-form-group">
+        <label className="cf-form-label">Starting Port (Default: 50000)</label>
         <input
           type="number"
+          className="cf-form-input"
           value={port}
           min={1024}
           max={65535}
           onChange={(e: ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
+          style={{ fontFamily: "var(--font-mono)", maxWidth: 180 }}
         />
-      </label>
-      {!valid && <div className="callout error">Pick a valid port.</div>}
-      <div className="actions">
-        <button className="ghost" onClick={onBack}>← Back</button>
-        <button className="primary" disabled={!valid} onClick={onNext}>Continue →</button>
+        {!valid && (
+          <div className="cf-callout error" style={{ marginTop: 6 }}>
+            Port must be between 1024 and 65535.
+          </div>
+        )}
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6 }}>
+        <button className="btn-cf-secondary" onClick={onBack}>
+          ← Back
+        </button>
+        <button className="btn-cf-primary" disabled={!valid} onClick={onNext}>
+          Next: API Token →
+        </button>
       </div>
     </>
   );
@@ -70,48 +114,54 @@ export function ApiStep({
   error: string | null;
 }) {
   const [show, setShow] = useState(false);
+
   return (
     <>
-      <p className="eyebrow">Step 3</p>
-      <h1>Cloudflare token</h1>
-      <p className="muted">Token needs Account Settings:Read and Cloudflare Tunnel:Read. We only call GET /accounts.</p>
-      <label className="field">
-        <span>API token</span>
-        <div className="token-input">
+      <div>
+        <h2 style={{ fontSize: 18, fontWeight: 600, color: "var(--text-main)" }}>
+          Authenticate API Token
+        </h2>
+        <p style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 4 }}>
+          Token requires <code style={{ fontFamily: "var(--font-mono)" }}>Account Settings: Read</code> and <code style={{ fontFamily: "var(--font-mono)" }}>Cloudflare Tunnel: Read</code>.
+        </p>
+      </div>
+
+      <div className="cf-form-group">
+        <label className="cf-form-label">API Token</label>
+        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
           <input
             type={show ? "text" : "password"}
+            className="cf-form-input"
+            style={{ flex: 1 }}
             value={apiKey}
             onChange={(e: ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
+            placeholder="Cloudflare API token"
+            autoComplete="off"
+            spellCheck="false"
           />
           <button
             type="button"
-            className="ghost token-toggle"
-            aria-label={show ? "Hide token" : "Show token"}
-            onClick={() => setShow((v) => !v)}
+            className="btn-cf-secondary"
+            onClick={() => setShow(!show)}
           >
-            <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              {show ? (
-                <>
-                  <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-5 0-9.27-3.11-11-8 1.03-3 3.17-5.5 5.9-6.88" />
-                  <path d="M1 1l22 22" />
-                  <path d="M9.88 9.88A3 3 0 0 0 12 15a3 3 0 0 0 2.12-.88" />
-                </>
-              ) : (
-                <>
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z" />
-                  <circle cx="12" cy="12" r="3" />
-                </>
-              )}
-            </svg>
+            {show ? <EyeOffIcon size={14} /> : <EyeIcon size={14} />}
           </button>
         </div>
-      </label>
-      {error && <div className="callout error">{error}</div>}
-      {verified && <div className="callout ok">Token verified</div>}
-      <div className="actions">
-        <button className="ghost" onClick={onBack}>← Back</button>
-        <button className="primary" disabled={!apiKey || verifying} onClick={onVerify}>
-          {verifying ? "Verifying..." : "Verify →"}
+      </div>
+
+      {error && <div className="cf-callout error">{error}</div>}
+      {verified && <div className="cf-callout ok">Token verified successfully!</div>}
+
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6 }}>
+        <button className="btn-cf-secondary" onClick={onBack} disabled={verifying}>
+          ← Back
+        </button>
+        <button
+          className="btn-cf-primary"
+          disabled={!apiKey.trim() || verifying}
+          onClick={onVerify}
+        >
+          {verifying ? "Verifying…" : "Verify & Launch →"}
         </button>
       </div>
     </>
@@ -121,12 +171,15 @@ export function ApiStep({
 export function DoneStep({ port, accountName, onReset }: { port: string; accountName?: string; onReset: () => void }) {
   return (
     <>
-      <p className="eyebrow">Done</p>
-      <h1>Setup complete</h1>
-      <p className="muted">Port start {port}. Account {accountName || "Unknown"}. Token stored locally.</p>
-      <div className="actions">
-        <button className="primary">Open TunnelDash →</button>
-        <button className="ghost" onClick={onReset}>Redo setup</button>
+      <div>
+        <h2 style={{ fontSize: 18, fontWeight: 600, color: "var(--text-main)" }}>Setup Complete</h2>
+        <p style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 4 }}>
+          Connected to {accountName || "Account"}. Local ports start at {port}.
+        </p>
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 12 }}>
+        <button className="btn-cf-secondary" onClick={onReset}>Redo Setup</button>
+        <button className="btn-cf-primary">Open Dashboard →</button>
       </div>
     </>
   );

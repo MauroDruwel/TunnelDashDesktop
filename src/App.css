@@ -1,588 +1,1158 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   TunnelDash · Authentic Cloudflare Kumo Design System (dash.cloudflare.com)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 :root {
-  --bg: #f2f2f7;
-  --surface: #ffffff;
-  --surface2: #f2f2f7;
-  --surface3: #f9f9fb;
-  --sidebar-fallback: rgba(246, 246, 248, 0.92);
-  --separator: #c6c6c8;
-  --separator-strong: #aeaeb2;
-  --label: #000000;
-  --secondary: rgba(60, 60, 67, 0.6);
-  --tertiary: rgba(60, 60, 67, 0.3);
-  --quaternary: rgba(60, 60, 67, 0.18);
-  --accent: #007aff;
-  --accent-dim: rgba(0, 122, 255, 0.1);
-  --accent-strong: rgba(0, 122, 255, 0.14);
-  --green: #34c759;
-  --green-dim: rgba(52, 199, 89, 0.12);
-  --red: #ff3b30;
-  --red-dim: rgba(255, 59, 48, 0.1);
-  --yellow: #ff9f0a;
-  --yellow-dim: rgba(255, 159, 10, 0.12);
-  --hover: rgba(0, 0, 0, 0.04);
-  --pressed: rgba(0, 0, 0, 0.08);
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
-  line-height: 1.47;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  color-scheme: light;
+  /* Cloudflare Official Tokens */
+  --cf-orange-6: #ee730a;
+  --cf-orange-5: #c05d08;
+  --cf-orange-7: #f8a054;
+  --cf-blue-4: #0051c3;
+  --cf-blue-5: #086fff;
+  --cf-blue-2: #003681;
+  --cf-blue-9: #ecf4ff;
+  --cf-green-6: #2db35e;
+  --cf-green-5: #228b49;
+  --cf-green-9: #e3f8eb;
+  --cf-red-5: #e81403;
+  --cf-red-9: #ffefee;
+  --cf-gray-0: #0a0a0a;
+  --cf-gray-1: #313131;
+  --cf-gray-2: #3d3d3d;
+  --cf-gray-3: #4a4a4a;
+  --cf-gray-4: #595959;
+  --cf-gray-5: #797979;
+  --cf-gray-6: #999999;
+  --cf-gray-7: #b6b6b6;
+  --cf-gray-8: #d9d9d9;
+  --cf-gray-9: #f2f2f2;
+
+  /* Cloudflare Kumo Semantic Tokens (Light) */
+  --kumo-canvas: #FFFFFF;
+  --kumo-base: #F9FAFB;
+  --kumo-recessed: #F3F4F6;
+  --kumo-tint: rgba(0, 0, 0, 0.05);
+  --kumo-line: #E5E7EB;
+  --kumo-line-strong: #D1D5DB;
+  --kumo-default: #111827;
+  --kumo-subtle: #6B7280;
+  --kumo-brand: #F6821F;
+  --kumo-interactive: #0051C3;
+  --kumo-interactive-hover: #003681;
+  --kumo-focus: rgba(0, 81, 195, 0.25);
+
+  --sidebar-width: 260px;
+  --sidebar-width-collapsed: 60px;
+  --sidebar-header-height: 58px;
+  --sidebar-animation: 250ms cubic-bezier(0.77, 0, 0.175, 1);
+
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
 }
 
 html.dark-theme {
-  --bg: #1c1c1e;
-  --surface: #2c2c2e;
-  --surface2: #3a3a3c;
-  --surface3: #48484a;
-  --sidebar-fallback: rgba(44, 44, 46, 0.92);
-  --separator: #38383a;
-  --separator-strong: #48484a;
-  --label: #ffffff;
-  --secondary: rgba(235, 235, 245, 0.6);
-  --tertiary: rgba(235, 235, 245, 0.3);
-  --quaternary: rgba(235, 235, 245, 0.18);
-  --accent: #0a84ff;
-  --accent-dim: rgba(10, 132, 255, 0.15);
-  --accent-strong: rgba(10, 132, 255, 0.24);
-  --green: #30d158;
-  --green-dim: rgba(48, 209, 88, 0.14);
-  --red: #ff453a;
-  --red-dim: rgba(255, 69, 58, 0.14);
-  --yellow: #ffd60a;
-  --yellow-dim: rgba(255, 214, 10, 0.14);
-  --hover: rgba(255, 255, 255, 0.05);
-  --pressed: rgba(255, 255, 255, 0.08);
-  color-scheme: dark;
+  /* Cloudflare Kumo Semantic Tokens (Dark) */
+  --kumo-canvas: #0F1218;
+  --kumo-base: #141822;
+  --kumo-recessed: #1C2333;
+  --kumo-tint: rgba(255, 255, 255, 0.06);
+  --kumo-line: #222938;
+  --kumo-line-strong: #333D52;
+  --kumo-default: #F9FAFB;
+  --kumo-subtle: #8E9BAE;
+  --kumo-brand: #F6821F;
+  --kumo-interactive: #3B82F6;
+  --kumo-interactive-hover: #60A5FA;
+  --kumo-focus: rgba(59, 130, 246, 0.35);
+
+  --cf-green-9: #064E3B;
+  --cf-green-5: #34D399;
+  --cf-red-9: #7F1D1D;
+  --cf-red-5: #F87171;
+  --cf-blue-9: #172554;
+  --cf-blue-5: #60A5FA;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+/* ─── Global Reset ────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
-html, body { min-height: 100vh; overflow-x: hidden; background: transparent; }
+html, body {
+  min-height: 100vh;
+  width: 100%;
+  background-color: var(--kumo-canvas);
+  color: var(--kumo-default);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
 
-#root, .app-shell { min-height: 100vh; }
-.app-shell { display: flex; }
+#root, .cf-kumo-app {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+}
 
-/* ─── Sidebar ─────────────────────────────────────────────────────────── */
-.sidebar {
-  width: 200px;
-  flex-shrink: 0;
-  background: var(--sidebar-fallback);
+/* ─── Kumo Sidebar Navigation ─────────────────────────────────────────────── */
+.cf-kumo-sidebar {
+  width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
+  background-color: var(--kumo-canvas);
+  border-right: 1px solid var(--kumo-line);
   display: flex;
   flex-direction: column;
-  padding: 0 8px 8px;
+  height: 100vh;
   position: sticky;
   top: 0;
-  height: 100vh;
-  overflow-y: auto;
-}
-html.mac .sidebar { background: transparent; padding-top: 52px; }
-
-.sidebar-brand {
-  font-size: 13px;
-  font-weight: 600;
-  padding: 4px 12px 16px;
-  letter-spacing: -0.1px;
+  user-select: none;
+  z-index: 40;
+  transition: width var(--sidebar-animation), min-width var(--sidebar-animation);
+  overflow: hidden;
 }
 
-.sidebar-section {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--tertiary);
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  padding: 0 12px 4px;
+.cf-kumo-sidebar.collapsed {
+  width: var(--sidebar-width-collapsed);
+  min-width: var(--sidebar-width-collapsed);
 }
 
-.sidebar-items { display: flex; flex-direction: column; gap: 1px; }
-.sidebar-item {
+/* Collapsed header: centre logo + toggle, stack vertically */
+.cf-kumo-sidebar.collapsed .cf-kumo-sidebar-header {
+  padding: 0 4px;
+  justify-content: center;
+  gap: 2px;
+  flex-direction: column;
+  height: auto;
+  min-height: var(--sidebar-header-height);
+}
+
+
+.cf-kumo-sidebar-header {
+  height: var(--sidebar-header-height);
+  border-bottom: 1px solid var(--kumo-line);
+  padding: 0 10px;
   display: flex;
   align-items: center;
-  gap: 7px;
-  width: 100%;
-  padding: 6px 10px;
-  border-radius: 7px;
-  background: none;
-  border: none;
-  color: var(--label);
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 400;
-  cursor: pointer;
-  text-align: left;
-  transition: background 0.1s ease;
-}
-.sidebar-item:hover:not(:disabled) { background: var(--hover); }
-.sidebar-item:active:not(:disabled) { background: var(--pressed); }
-.sidebar-item:disabled { opacity: 0.35; cursor: default; }
-.sidebar-item.active {
-  background: var(--accent);
-  color: #ffffff;
-  font-weight: 500;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
-.sidebar-footer {
-  margin-top: auto;
+.cf-logo-link {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 10px 10px 4px;
-  border-top: 1px solid var(--separator);
+  align-items: center;
+  text-decoration: none;
+  cursor: pointer;
+  padding-left: 2px;
+  flex-shrink: 0;
 }
-.sidebar-status {
-  font-size: 11px;
+
+.cf-account-switcher-btn {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--kumo-default);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  text-align: left;
+}
+
+.cf-account-switcher-btn:hover {
+  background-color: var(--kumo-tint);
+}
+
+.cf-account-title {
+  font-size: 13.5px;
   font-weight: 500;
-  color: var(--secondary);
+  color: var(--kumo-default);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  padding: 0 2px;
-}
-.sidebar-meta {
-  font-size: 11px;
-  color: var(--tertiary);
-  font-variant-numeric: tabular-nums;
-  padding: 0 2px;
+  display: block;
 }
 
-.theme-toggle {
-  margin-top: 8px;
-  align-self: flex-start;
-  background: var(--surface2);
-  border: 1px solid var(--separator);
-  color: var(--secondary);
+.cf-account-caret {
+  color: var(--kumo-subtle);
+  flex-shrink: 0;
+}
+
+.cf-sidebar-toggle-btn {
+  background: transparent;
+  border: none;
+  color: var(--kumo-subtle);
   width: 28px;
   height: 28px;
   border-radius: 6px;
-  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.12s ease;
-  outline: none;
-}
-.theme-toggle:hover { background: var(--hover); color: var(--label); border-color: var(--separator-strong); }
-.theme-toggle:active { transform: scale(0.92); }
-
-/* ─── Main ─────────────────────────────────────────────────────────────── */
-main {
-  flex: 1;
-  background: var(--bg);
-  padding: 36px 48px 48px;
-  min-width: 0;
-  min-height: 100vh;
-}
-html.mac main { padding-top: 42px; }
-
-/* ─── Typography ───────────────────────────────────────────────────────── */
-.eyebrow {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--tertiary);
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  margin: 0 0 2px;
-}
-h1 {
-  margin: 0 0 2px;
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: -0.35px;
-  line-height: 1.2;
-}
-.muted { color: var(--secondary); font-size: 13px; margin: 0 0 14px; }
-
-.stack { display: flex; flex-direction: column; gap: 14px; animation: fadeIn 0.22s ease; }
-.row { display: flex; gap: 10px; align-items: center; }
-.between { justify-content: space-between; }
-.actions { display: flex; gap: 8px; flex-wrap: wrap; }
-
-/* ─── Buttons ──────────────────────────────────────────────────────────── */
-button { font-family: inherit; }
-
-.primary, .ghost, .danger-btn, .pill-btn {
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 500;
   cursor: pointer;
   transition: all 0.12s ease;
-  font-family: inherit;
-  line-height: 1;
-}
-.primary {
-  background: var(--accent);
-  border: 1px solid transparent;
-  color: #ffffff;
-  padding: 8px 16px;
-  font-weight: 600;
-}
-.primary:hover:not(:disabled) { filter: brightness(1.06); }
-.primary:active:not(:disabled) { transform: scale(0.97); }
-
-.ghost {
-  background: transparent;
-  border: 1px solid var(--separator);
-  color: var(--label);
-  padding: 7px 14px;
-}
-.ghost:hover:not(:disabled) { background: var(--hover); border-color: var(--separator-strong); }
-.ghost:active:not(:disabled) { background: var(--pressed); }
-.ghost.small { padding: 4px 10px; font-size: 12px; border-radius: 6px; }
-
-.primary:disabled, .ghost:disabled { opacity: 0.35; cursor: default; }
-
-.danger-btn {
-  background: var(--red-dim);
-  border: 1px solid transparent;
-  color: var(--red);
-  padding: 8px 14px;
-  font-weight: 600;
-}
-.danger-btn:hover { background: var(--red); color: #ffffff; }
-
-.pill-btn {
-  background: var(--surface2);
-  border: 1px solid var(--separator);
-  color: var(--label);
-  padding: 6px 13px;
-  font-weight: 500;
-}
-.pill-btn:hover:not(:disabled) { background: var(--hover); border-color: var(--separator-strong); }
-.pill-btn:active:not(:disabled) { background: var(--pressed); }
-.pill-btn.on {
-  background: var(--accent-dim);
-  border-color: var(--accent-strong);
-  color: var(--accent);
-  font-weight: 600;
-}
-.pill-btn:disabled { opacity: 0.35; cursor: default; }
-
-/* ─── Inputs ───────────────────────────────────────────────────────────── */
-.field { display: flex; flex-direction: column; gap: 5px; }
-.field span { font-size: 12px; font-weight: 500; color: var(--secondary); }
-input {
-  background: var(--surface2);
-  border: 1px solid var(--separator);
-  border-radius: 8px;
-  color: var(--label);
-  font-family: inherit;
-  font-size: 14px;
-  padding: 9px 12px;
-  outline: none;
-  transition: border-color 0.12s ease, box-shadow 0.12s ease;
-}
-html.dark-theme input { background: var(--surface3); }
-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
-input::placeholder { color: var(--tertiary); }
-
-/* ─── Callouts ─────────────────────────────────────────────────────────── */
-.callout {
-  border-radius: 10px;
-  padding: 12px 14px;
-  border: 1px solid var(--separator);
-  background: var(--surface2);
-  font-size: 13px;
-  color: var(--secondary);
-}
-.callout.error { border-color: var(--red-dim); color: var(--red); background: var(--red-dim); }
-.callout.ok { border-color: var(--green-dim); color: var(--green); background: var(--green-dim); }
-
-/* ─── Setup ────────────────────────────────────────────────────────────── */
-.setup-screen { display: flex; justify-content: center; padding-top: 12vh; animation: fadeIn 0.3s ease; }
-.card {
-  background: var(--surface);
-  border: 1px solid var(--separator);
-  border-radius: 12px;
-  padding: 28px;
-}
-.setup-card { max-width: 440px; width: 100%; }
-.progress-text {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--accent);
-  margin-bottom: 6px;
-  font-variant-numeric: tabular-nums;
-}
-.token-input { display: flex; gap: 8px; align-items: center; }
-.token-input input { flex: 1; }
-.token-toggle { border-radius: 8px; padding: 9px; display: flex; align-items: center; }
-
-/* ─── Tunnels (Grouped List) ───────────────────────────────────────────── */
-.tunnel-list { display: flex; flex-direction: column; gap: 20px; }
-
-.tunnel-card {
-  background: var(--surface);
-  border: 1px solid var(--separator);
-  border-radius: 10px;
-  overflow: hidden;
-}
-.tunnel-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-  padding: 14px 16px;
-  border-bottom: 1px solid var(--separator);
-}
-.tunnel-name {
-  font-size: 16px;
-  font-weight: 600;
-  letter-spacing: -0.2px;
-  line-height: 1.25;
-}
-.tunnel-meta {
-  color: var(--secondary);
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-  line-height: 1.3;
-}
-
-/* Status badge - Apple chip style */
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 3px 8px;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
   flex-shrink: 0;
 }
-.badge::before {
-  content: '';
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: currentColor;
-}
-.badge.online { background: var(--green-dim); color: var(--green); }
-.badge.offline { background: var(--red-dim); color: var(--red); }
 
-/* Config rows - Apple list rows with thin separators */
-.config-list { display: flex; flex-direction: column; }
-.config-row {
+.cf-sidebar-toggle-btn:hover {
+  background-color: var(--kumo-tint);
+  color: var(--kumo-default);
+}
+
+.cf-kumo-sidebar-body {
+  flex: 1;
+  padding: 12px 10px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Collapsed body: remove side padding, centre children */
+.cf-kumo-sidebar.collapsed .cf-kumo-sidebar-body {
+  padding: 12px 0;
+  align-items: center;
+}
+
+
+/* Quick Search Button in Sidebar */
+.cf-quick-search-btn {
+  width: 100%;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 8px;
+  background-color: var(--kumo-base);
+  border: 1px solid var(--kumo-line);
+  color: var(--kumo-subtle);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 400;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  margin-bottom: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.cf-kumo-sidebar.collapsed .cf-quick-search-btn {
+  padding: 0;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  margin: 0 0 6px 0;
+  flex-shrink: 0;
+}
+
+.cf-kumo-sidebar.collapsed .cf-quick-search-btn span,
+.cf-kumo-sidebar.collapsed .cf-quick-search-kbd {
+  display: none;
+}
+
+.cf-quick-search-btn:hover {
+  background-color: var(--kumo-tint);
+  color: var(--kumo-default);
+}
+
+.cf-quick-search-kbd {
+  margin-left: auto;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--kumo-subtle);
+}
+
+/* Nav Menu List */
+.cf-kumo-menu {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+}
+
+.cf-kumo-menu-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 34px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--kumo-default);
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.12s ease, color 0.12s ease;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.cf-kumo-sidebar.collapsed .cf-kumo-menu {
+  align-items: center;
+}
+
+.cf-kumo-sidebar.collapsed .cf-kumo-menu-link {
+  padding: 0;
+  justify-content: center;
+  align-items: center;
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+  border-radius: 8px;
+  overflow: visible;
+}
+
+.cf-kumo-sidebar.collapsed .cf-kumo-menu-link-inner span:not(.cf-kumo-menu-icon),
+.cf-kumo-sidebar.collapsed .cf-kumo-badge {
+  display: none;
+}
+
+.cf-kumo-sidebar.collapsed .cf-kumo-menu-link-inner {
+  gap: 0;
+  justify-content: center;
+}
+
+.cf-kumo-menu-link-inner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cf-kumo-menu-icon {
+  color: var(--kumo-subtle);
+  opacity: 0.65;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.cf-kumo-menu-link:hover:not(:disabled) {
+  background-color: var(--kumo-recessed);
+}
+
+.cf-kumo-menu-link:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.cf-kumo-menu-link.active {
+  background-color: var(--kumo-recessed);
+  color: var(--kumo-default);
+  font-weight: 600;
+}
+
+.cf-kumo-menu-link.active .cf-kumo-menu-icon {
+  color: var(--kumo-interactive);
+  opacity: 1;
+}
+
+.cf-kumo-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--kumo-tint);
+  color: var(--kumo-subtle);
+  flex-shrink: 0;
+}
+
+.cf-kumo-menu-link.active .cf-kumo-badge {
+  background: var(--kumo-interactive);
+  color: #FFFFFF;
+}
+
+/* Sidebar Footer */
+.cf-kumo-sidebar-footer {
+  padding: 12px 10px;
+  border-top: 1px solid var(--kumo-line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--kumo-subtle);
+}
+
+.cf-kumo-sidebar.collapsed .cf-kumo-sidebar-footer {
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 0;
+  justify-content: center;
+}
+
+.cf-kumo-sidebar.collapsed .cf-daemon-text {
+  display: none;
+}
+
+.cf-theme-toggle-btn {
+  background: transparent;
+  border: 1px solid var(--kumo-line);
+  color: var(--kumo-subtle);
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.cf-theme-toggle-btn:hover {
+  background-color: var(--kumo-tint);
+  color: var(--kumo-default);
+}
+
+/* ─── Main Content Canvas (Full Resolution / Fluid Width) ─────────────────── */
+.cf-kumo-main {
+  flex: 1;
+  min-width: 0;
+  background-color: var(--kumo-canvas);
+  padding: 24px 36px 60px;
+  overflow-y: auto;
+  height: 100vh;
+}
+
+.cf-kumo-content-container {
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ─── Cloudflare Header ───────────────────────────────────────────────────── */
+.cf-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.cf-breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--kumo-subtle);
+  margin-bottom: 4px;
+}
+
+.cf-breadcrumbs span.current {
+  color: var(--kumo-default);
+  font-weight: 500;
+}
+
+h1.cf-page-title {
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  color: var(--kumo-default);
+}
+
+.cf-page-subtitle {
+  font-size: 13.5px;
+  color: var(--kumo-subtle);
+  margin-top: 4px;
+}
+
+/* ─── Cloudflare Kumo Buttons ─────────────────────────────────────────────── */
+button {
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+}
+
+.btn-cf-primary {
+  background-color: var(--kumo-interactive);
+  border: 1px solid var(--kumo-interactive);
+  color: #FFFFFF;
+  padding: 7px 14px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background-color 0.12s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.btn-cf-primary:hover:not(:disabled) {
+  background-color: var(--kumo-interactive-hover);
+}
+
+.btn-cf-primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-cf-secondary {
+  background-color: var(--kumo-canvas);
+  border: 1px solid var(--kumo-line-strong);
+  color: var(--kumo-default);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.12s ease;
+}
+
+.btn-cf-secondary:hover:not(:disabled) {
+  background-color: var(--kumo-base);
+  border-color: var(--kumo-subtle);
+}
+
+.btn-cf-secondary.small {
+  padding: 4px 8px;
+  font-size: 12px;
+  border-radius: 4px;
+}
+
+.btn-cf-danger {
+  background-color: var(--cf-red-9);
+  border: 1px solid var(--cf-red-5);
+  color: var(--cf-red-5);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-cf-danger:hover:not(:disabled) {
+  background-color: var(--cf-red-5);
+  color: #FFFFFF;
+}
+
+/* ─── Cloudflare Data Table ──────────────────────────────────────────────── */
+.cf-table-card {
+  background-color: var(--kumo-canvas);
+  border: 1px solid var(--kumo-line);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  width: 100%;
+}
+
+.cf-table-toolbar {
+  padding: 12px 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--separator);
-}
-.config-row:last-child { border-bottom: none; }
-.config-row:hover { background: var(--hover); }
-
-.config-info { display: flex; align-items: center; gap: 10px; min-width: 200px; }
-.pill-lite {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 7px;
-  border-radius: 5px;
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-  background: var(--surface2);
-  color: var(--secondary);
-  border: 1px solid var(--separator);
-}
-.tunnel-actions.inline {
-  flex-shrink: 0;
-  display: flex;
-  gap: 7px;
-  align-items: center;
+  border-bottom: 1px solid var(--kumo-line);
+  background-color: var(--kumo-canvas);
   flex-wrap: wrap;
 }
 
-/* ─── SSH Rule Form ────────────────────────────────────────────────────── */
-.ssh-rule { display: flex; }
-.ssh-btn { font-weight: 600; }
-.ssh-rule-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  background: var(--surface2);
-  border: 1px solid var(--separator);
-  border-radius: 10px;
-  padding: 10px 12px;
-  animation: fadeIn 0.15s ease;
-}
-.ssh-rule-fields { display: flex; gap: 8px; }
-.ssh-rule-fields input { min-width: 120px; flex: 1; }
-.ssh-rule-actions { display: flex; gap: 6px; align-items: center; }
-.ssh-rule-msg {
-  font-size: 11px;
-  color: var(--secondary);
-  font-variant-numeric: tabular-nums;
-  padding: 0 2px;
+.cf-search-wrapper {
+  position: relative;
+  min-width: 280px;
+  max-width: 440px;
+  flex: 1;
 }
 
-/* ─── Terminal ─────────────────────────────────────────────────────────── */
-.terminal-tab { height: 100%; display: flex; }
-.terminal-tab > .stack { flex: 1; min-height: 0; }
-
-.empty-sessions {
+.cf-search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--kumo-subtle);
+  pointer-events: none;
   display: flex;
-  gap: 10px;
   align-items: center;
-  color: var(--secondary);
-  max-width: 400px;
-  font-size: 13px;
-  line-height: 1.5;
 }
-.empty-sessions b { color: var(--label); font-weight: 600; }
 
-/* Session tabs - Terminal.app style */
-.session-tabs { display: flex; gap: 5px; flex-wrap: wrap; }
-.session-tab {
+.cf-search-input {
+  width: 100%;
+  padding: 6px 10px 6px 32px;
+  border: 1px solid var(--kumo-line-strong);
+  border-radius: 6px;
+  background-color: var(--kumo-canvas);
+  color: var(--kumo-default);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.12s ease;
+}
+
+.cf-search-input:focus {
+  border-color: var(--kumo-interactive);
+  box-shadow: 0 0 0 2px var(--kumo-focus);
+}
+
+.cf-filter-tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cf-filter-tab {
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--kumo-subtle);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.cf-filter-tab:hover {
+  background-color: var(--kumo-tint);
+  color: var(--kumo-default);
+}
+
+.cf-filter-tab.active {
+  background-color: var(--kumo-base);
+  border-color: var(--kumo-line);
+  color: var(--kumo-default);
+  font-weight: 600;
+}
+
+/* ─── Real Cloudflare Table ──────────────────────────────────────────────── */
+.cf-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13px;
+}
+
+.cf-table th {
+  background-color: var(--kumo-base);
+  color: var(--kumo-subtle);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--kumo-line);
+  white-space: nowrap;
+}
+
+.cf-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--kumo-line);
+  vertical-align: middle;
+  color: var(--kumo-default);
+}
+
+.cf-table tr:last-child td {
+  border-bottom: none;
+}
+
+.cf-table tbody tr:hover {
+  background-color: var(--kumo-tint);
+}
+
+/* Status Badge */
+.cf-status-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 5px 10px 5px 10px;
-  border-radius: 6px;
-  border: 1px solid var(--separator);
-  background: var(--surface2);
-  color: var(--label);
-  font-family: ui-monospace, "SF Mono", "Cascadia Mono", "Segoe UI Mono", Menlo, Consolas, monospace;
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.1s ease;
-  max-width: 240px;
-  line-height: 1;
+  gap: 5px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  line-height: 1.4;
+  white-space: nowrap;
 }
-.session-tab:hover { background: var(--hover); border-color: var(--separator-strong); }
-.session-tab.active {
-  background: var(--accent-dim);
-  border-color: var(--accent-strong);
-}
-.session-dot {
+
+.cf-status-badge .dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--green);
-  flex-shrink: 0;
+  background-color: currentColor;
 }
-.session-tab.closed .session-dot { background: var(--red); }
-.session-tab.connecting .session-dot { background: var(--yellow); animation: pulse 1.2s ease infinite; }
-.session-close {
-  margin-left: 2px;
-  color: var(--tertiary);
-  font-size: 13px;
-  line-height: 1;
-  width: 16px;
-  height: 16px;
+
+.cf-status-badge.healthy {
+  background-color: var(--cf-green-9);
+  color: var(--cf-green-5);
+}
+
+.cf-status-badge.down {
+  background-color: var(--cf-red-9);
+  color: var(--cf-red-5);
+}
+
+/* Protocol Tag */
+.cf-proto-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  background-color: var(--kumo-base);
+  border: 1px solid var(--kumo-line);
+  color: var(--kumo-subtle);
+}
+
+.cf-proto-tag.ssh {
+  background-color: #FEF3C7;
+  color: #92400E;
+  border-color: #FDE68A;
+}
+
+html.dark-theme .cf-proto-tag.ssh {
+  background-color: #78350F;
+  color: #FDE68A;
+  border-color: #92400E;
+}
+
+.cf-proto-tag.http, .cf-proto-tag.https {
+  background-color: var(--cf-green-9);
+  color: var(--cf-green-5);
+}
+
+.cf-proto-tag.tcp {
+  background-color: var(--cf-blue-9);
+  color: var(--cf-blue-5);
+}
+
+.cf-uuid-text {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--kumo-subtle);
+}
+
+.cf-hostname-link {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--kumo-interactive);
+  text-decoration: none;
+}
+
+.cf-hostname-link:hover {
+  text-decoration: underline;
+}
+
+.cf-copy-btn {
+  background: transparent;
+  border: none;
+  color: var(--kumo-subtle);
+  cursor: pointer;
+  padding: 2px 4px;
   border-radius: 4px;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
 }
-.session-close:hover { color: var(--label); background: var(--hover); }
 
-.terminal-pane { display: flex; min-height: 400px; flex: 1; }
-.terminal-pane[hidden] { display: none; }
-.terminal-wrap {
-  flex: 1;
-  min-height: 0;
-  background: #101014;
-  border-radius: 10px;
+.cf-copy-btn:hover {
+  color: var(--kumo-default);
+  background-color: var(--kumo-tint);
+}
+
+/* Ingress Sub-Table */
+.cf-subtable-container {
+  background-color: var(--kumo-base);
+  border-top: 1px solid var(--kumo-line);
+  padding: 12px 16px 16px 36px;
+}
+
+.cf-subtable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  background-color: var(--kumo-canvas);
+  border: 1px solid var(--kumo-line);
+  border-radius: 6px;
   overflow: hidden;
-  padding: 6px;
 }
-html.dark-theme .terminal-wrap { background: #000000; }
-.terminal-wrap .xterm { height: 100%; }
-.terminal-wrap .xterm-viewport { background: transparent !important; }
 
-/* ─── Settings ─────────────────────────────────────────────────────────── */
-.section {
-  padding: 14px 16px;
-  border: 1px solid var(--separator);
-  border-radius: 10px;
-  background: var(--surface);
+.cf-subtable th {
+  background-color: var(--kumo-recessed);
+  color: var(--kumo-subtle);
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--kumo-line);
 }
-.section.danger { border-color: var(--red-dim); background: var(--red-dim); }
 
-.toggle-row {
+.cf-subtable td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--kumo-line);
+  color: var(--kumo-default);
+}
+
+.cf-subtable tr:last-child td {
+  border-bottom: none;
+}
+
+/* SSH Panel */
+.cf-ssh-panel {
+  background-color: var(--kumo-canvas);
+  border: 1px solid var(--kumo-line-strong);
+  border-radius: 6px;
+  padding: 12px 14px;
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cf-ssh-fields {
+  display: flex;
+  gap: 10px;
+}
+
+.cf-ssh-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+}
+
+.cf-ssh-field label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--kumo-subtle);
+}
+
+.cf-ssh-input {
+  padding: 5px 8px;
+  border: 1px solid var(--kumo-line-strong);
+  border-radius: 4px;
+  font-size: 12.5px;
+  background-color: var(--kumo-canvas);
+  color: var(--kumo-default);
+  outline: none;
+}
+
+.cf-ssh-input:focus {
+  border-color: var(--kumo-interactive);
+  box-shadow: 0 0 0 2px var(--kumo-focus);
+}
+
+/* ─── Settings Card ──────────────────────────────────────────────────────── */
+.cf-card {
+  background-color: var(--kumo-canvas);
+  border: 1px solid var(--kumo-line);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  width: 100%;
+}
+
+.cf-card-header {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--kumo-line);
+  background-color: var(--kumo-canvas);
+}
+
+.cf-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--kumo-default);
+}
+
+.cf-card-desc {
+  font-size: 12.5px;
+  color: var(--kumo-subtle);
+  margin-top: 2px;
+}
+
+.cf-card-body {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.cf-card-footer {
+  padding: 12px 18px;
+  background-color: var(--kumo-base);
+  border-top: 1px solid var(--kumo-line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cf-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.cf-form-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--kumo-default);
+}
+
+.cf-form-help {
+  font-size: 12px;
+  color: var(--kumo-subtle);
+}
+
+.cf-form-input {
+  padding: 7px 10px;
+  border: 1px solid var(--kumo-line-strong);
+  border-radius: 6px;
+  font-size: 13px;
+  background-color: var(--kumo-canvas);
+  color: var(--kumo-default);
+  outline: none;
+}
+
+.cf-form-input:focus {
+  border-color: var(--kumo-interactive);
+  box-shadow: 0 0 0 2px var(--kumo-focus);
+}
+
+/* Switch Row */
+.cf-switch-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--separator);
+  padding: 12px 0;
+  border-bottom: 1px solid var(--kumo-line);
 }
-.toggle-row:last-child { border-bottom: none; }
-.toggle-label { font-size: 14px; font-weight: 400; }
 
-/* macOS toggle switch */
-.switch {
-  width: 42px;
-  height: 26px;
-  border-radius: 13px;
+.cf-switch-row:last-child {
+  border-bottom: none;
+}
+
+.cf-switch {
+  width: 36px;
+  height: 20px;
+  border-radius: 10px;
+  background: var(--kumo-line-strong);
   border: none;
-  background: #e9e9ea;
   display: inline-flex;
   align-items: center;
   padding: 2px;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: background-color 0.15s ease;
   flex-shrink: 0;
-  outline: none;
 }
-html.dark-theme .switch { background: #39393d; }
-.switch span {
-  width: 22px;
-  height: 22px;
+
+.cf-switch span {
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
-  background: #ffffff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25), 0 0 1px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+  background: #FFFFFF;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  transition: transform 0.15s ease;
 }
-.switch.on { background: var(--accent); }
-.switch.on span { transform: translateX(16px); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2); }
 
-/* ─── Scrollbar ────────────────────────────────────────────────────────── */
-::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb {
-  background: transparent;
+.cf-switch.on {
+  background-color: var(--kumo-interactive);
+}
+
+.cf-switch.on span {
+  transform: translateX(16px);
+}
+
+/* ─── Callouts ───────────────────────────────────────────────────────────── */
+.cf-callout {
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--kumo-line);
+  background-color: var(--kumo-canvas);
+  width: 100%;
+}
+
+.cf-callout.error {
+  border-color: var(--cf-red-5);
+  background-color: var(--cf-red-9);
+  color: var(--cf-red-5);
+}
+
+.cf-callout.ok {
+  border-color: var(--cf-green-5);
+  background-color: var(--cf-green-9);
+  color: var(--cf-green-5);
+}
+
+/* ─── Cloudflare Terminal ─────────────────────────────────────────────────── */
+.cf-terminal-card {
+  background-color: #0F1218;
+  border: 1px solid #222938;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 150px);
+  min-height: 520px;
+  width: 100%;
+  overflow: hidden;
+}
+
+.cf-terminal-header {
+  background-color: #141822;
+  border-bottom: 1px solid #222938;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cf-terminal-tabs {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+}
+
+.cf-terminal-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
   border-radius: 4px;
-  border: 2px solid transparent;
-  background-clip: padding-box;
-}
-.sidebar::-webkit-scrollbar-thumb { background: transparent; border: 2px solid transparent; }
-.sidebar:hover::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.15); background-clip: padding-box; }
-html.dark-theme .sidebar:hover::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); background-clip: padding-box; }
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(3px); }
-  to { opacity: 1; transform: translateY(0); }
+  background-color: #0F1218;
+  border: 1px solid #222938;
+  color: #9CA3AF;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  cursor: pointer;
 }
 
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
+.cf-terminal-tab.active {
+  background-color: var(--kumo-interactive);
+  border-color: var(--kumo-interactive);
+  color: #FFFFFF;
+  font-weight: 500;
 }
 
-/* ─── Responsive ───────────────────────────────────────────────────────── */
+.cf-terminal-tab-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: #10B981;
+}
+
+.cf-terminal-body {
+  flex: 1;
+  min-height: 0;
+  padding: 8px;
+  background-color: #0F1218;
+}
+
+.cf-terminal-body .xterm {
+  height: 100%;
+}
+
+.cf-terminal-body .xterm-viewport {
+  background: transparent !important;
+}
+
+/* ─── Setup Stepper ──────────────────────────────────────────────────────── */
+.cf-setup-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 120px);
+  padding: 20px;
+  width: 100%;
+}
+
+.cf-setup-card {
+  max-width: 480px;
+  width: 100%;
+  background-color: var(--kumo-canvas);
+  border: 1px solid var(--kumo-line);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  padding: 28px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.cf-setup-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.cf-step-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--kumo-subtle);
+}
+
+.cf-step-num {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: var(--kumo-base);
+  border: 1px solid var(--kumo-line-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+}
+
+.cf-step-item.active {
+  color: var(--kumo-interactive);
+  font-weight: 600;
+}
+
+.cf-step-item.active .cf-step-num {
+  background-color: var(--kumo-interactive);
+  border-color: var(--kumo-interactive);
+  color: #FFFFFF;
+}
+
+.cf-step-line {
+  flex: 1;
+  height: 1px;
+  background-color: var(--kumo-line);
+  margin: 0 8px;
+}
+
+/* ─── Responsive ─────────────────────────────────────────────────────────── */
 @media (max-width: 860px) {
-  .app-shell { flex-direction: column; }
-  .sidebar {
-    width: 100%;
+  .cf-kumo-app { flex-direction: column; }
+  .cf-kumo-sidebar {
+    width: 100% !important;
+    min-width: 100% !important;
     height: auto;
-    position: sticky;
-    flex-direction: row;
-    align-items: center;
-    padding: 8px 14px;
-    gap: 8px;
-    overflow-x: auto;
-    overflow-y: hidden;
+    position: static;
+    border-right: none;
+    border-bottom: 1px solid var(--kumo-line);
   }
-  html.mac .sidebar { padding-top: 8px; }
-  .sidebar-brand { padding: 0 4px 0 0; }
-  .sidebar-section { display: none; }
-  .sidebar-items { flex-direction: row; gap: 2px; }
-  .sidebar-item { width: auto; padding: 5px 10px; white-space: nowrap; font-size: 12px; }
-  .sidebar-footer { margin: 0 0 0 auto; flex-direction: row; align-items: center; gap: 6px; border-top: none; padding: 0; }
-  .sidebar-status, .sidebar-meta { display: none; }
-  .theme-toggle { margin: 0; width: 26px; height: 26px; }
-  main { padding: 20px 16px; }
-  .ssh-rule-fields { flex-direction: column; }
-  .ssh-rule-fields input { min-width: 0; }
+  .cf-kumo-sidebar-body { flex-direction: row; flex-wrap: wrap; }
+  .cf-quick-search-btn { display: none; }
+  .cf-kumo-menu { flex-direction: row; }
+  .cf-kumo-main { padding: 20px 16px; }
 }

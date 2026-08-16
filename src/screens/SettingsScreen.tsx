@@ -1,4 +1,11 @@
+import { useState } from "react";
 import { Settings } from "../types";
+import {
+  ShieldCheckIcon,
+  EyeIcon,
+  EyeOffIcon,
+  TrashIcon,
+} from "../components/icons";
 
 export type SettingsScreenProps = {
   settings: Settings;
@@ -25,99 +32,238 @@ export function SettingsScreen({
   isPortValid,
   cloudflaredVersion,
 }: SettingsScreenProps) {
+  const [showToken, setShowToken] = useState(false);
+  const [clearing, setClearing] = useState(false);
+
+  const handleClearAll = async () => {
+    if (window.confirm("Are you sure you want to clear all stored credentials, tokens, and active tunnels?")) {
+      setClearing(true);
+      try {
+        await clearAll();
+      } finally {
+        setClearing(false);
+      }
+    }
+  };
+
+  const portNum = Number(settings.portStart) || 50000;
+
   return (
-    <div className="stack">
-      <p className="eyebrow">Settings</p>
-      <h1>Cloudflare token</h1>
-      <p className="muted">Token needs Account Settings:Read and Cloudflare Tunnel:Read.</p>
-
-      <label className="field">
-        <span>API token</span>
-        <input
-          type="password"
-          value={settings.apiKey}
-          onChange={(e) => {
-            setError(null);
-            save({ apiKey: e.target.value, verified: false });
-          }}
-          placeholder="Enter Cloudflare token"
-        />
-      </label>
-
-      <label className="field">
-        <span>Account ID</span>
-        <input
-          type="text"
-          value={settings.accountId || ""}
-          placeholder="Will fill after verify"
-          onChange={(e) => save({ accountId: e.target.value })}
-        />
-      </label>
-
-      <div className="actions">
-        <button className="primary" disabled={!settings.apiKey || verifying} onClick={verify}>
-          {verifying ? "Verifying..." : verified ? "Verified" : "Verify token"}
-        </button>
-        <button className="ghost" onClick={() => save({})}>Save</button>
+    <>
+      {/* ─── Cloudflare Page Header ─── */}
+      <div className="cf-page-header">
+        <div>
+          <div className="cf-breadcrumbs">
+            <span>Zero Trust</span>
+            <span>/</span>
+            <span className="current">Settings</span>
+          </div>
+          <h1 className="cf-title">Settings & Access</h1>
+          <div className="cf-subtitle">
+            Configure your Cloudflare API token, local port forwarding defaults, and UI preferences.
+          </div>
+        </div>
       </div>
 
-      {error && <div className="callout error">{error}</div>}
-      {verified && <div className="callout ok">Token verified</div>}
+      {error && <div className="cf-callout error">{error}</div>}
+      {verified && !error && (
+        <div className="cf-callout ok">
+          <ShieldCheckIcon size={16} />
+          <span>API Token active and authenticated for account <b>{settings.accountName || "Cloudflare Account"}</b> ({settings.accountId}).</span>
+        </div>
+      )}
 
-      <div className="section">
-        <p className="eyebrow">Port range</p>
-        <label className="field">
-          <span>Port range start</span>
-          <input
-            type="number"
-            value={settings.portStart}
-            min={1024}
-            max={65535}
-            onChange={(e) => save({ portStart: e.target.value })}
-          />
-          {!isPortValid && <div className="callout error">Pick a port between 1024 and 65535.</div>}
-        </label>
-        <p className="muted">We map tunnels to local ports starting here.</p>
+      {/* ─── Card 1: API Authentication ─── */}
+      <div className="cf-card">
+        <div className="cf-card-header">
+          <div className="cf-card-title">Cloudflare API Token Authentication</div>
+          <div className="cf-card-desc">
+            Your token requires <code style={{ fontFamily: "var(--font-mono)" }}>Account Settings: Read</code> and <code style={{ fontFamily: "var(--font-mono)" }}>Cloudflare Tunnel: Read</code> permissions.
+          </div>
+        </div>
+
+        <div className="cf-card-body">
+          <div className="cf-form-group">
+            <label className="cf-form-label">API Token</label>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <input
+                type={showToken ? "text" : "password"}
+                className="cf-form-input"
+                style={{ flex: 1 }}
+                value={settings.apiKey}
+                onChange={(e) => {
+                  setError(null);
+                  save({ apiKey: e.target.value, verified: false });
+                }}
+                placeholder="Paste your Cloudflare API token..."
+                autoComplete="off"
+                spellCheck="false"
+              />
+              <button
+                type="button"
+                className="btn-cf-secondary"
+                onClick={() => setShowToken(!showToken)}
+                title={showToken ? "Hide token" : "Show token"}
+              >
+                {showToken ? <EyeOffIcon size={14} /> : <EyeIcon size={14} />}
+              </button>
+            </div>
+          </div>
+
+          <div className="cf-form-group">
+            <label className="cf-form-label">Account ID</label>
+            <input
+              type="text"
+              className="cf-form-input"
+              value={settings.accountId || ""}
+              placeholder="Will populate automatically upon token verification"
+              onChange={(e) => save({ accountId: e.target.value })}
+              style={{ fontFamily: "var(--font-mono)" }}
+            />
+            <span className="cf-form-help">Automatically retrieved from GET /accounts on verify.</span>
+          </div>
+        </div>
+
+        <div className="cf-card-footer">
+          <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+            {verified ? "Status: Authenticated" : "Status: Not verified"}
+          </span>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button
+              className="btn-cf-primary"
+              disabled={!settings.apiKey.trim() || verifying}
+              onClick={verify}
+            >
+              {verifying ? "Verifying Token…" : verified ? "Re-verify Token" : "Verify Token"}
+            </button>
+            <button className="btn-cf-secondary" onClick={() => save({})}>
+              Save
+            </button>
+          </div>
+        </div>
       </div>
 
-      <div className="section">
-        <p className="eyebrow">Display</p>
-        <ToggleRow
-          label="Hide HTTP/HTTPS protocols"
-          checked={settings.hideHttp}
-          onChange={(v) => save({ hideHttp: v })}
-        />
-        <ToggleRow
-          label="Hide IP address info"
-          checked={settings.hideIp}
-          onChange={(v) => save({ hideIp: v })}
-        />
-        <ToggleRow
-          label="Hide offline tunnels"
-          checked={settings.hideOffline}
-          onChange={(v) => save({ hideOffline: v })}
-        />
-        <p className="muted">Cloudflared version: {cloudflaredVersion || "Not detected yet"}</p>
+      {/* ─── Card 2: Local Network Binding ─── */}
+      <div className="cf-card">
+        <div className="cf-card-header">
+          <div className="cf-card-title">Local Port Allocation Range</div>
+          <div className="cf-card-desc">
+            TunnelDash assigns sequential local ports starting from this number for active tunnel proxies.
+          </div>
+        </div>
+
+        <div className="cf-card-body">
+          <div className="cf-form-group">
+            <label className="cf-form-label">Starting Local Port (Default: 50000)</label>
+            <input
+              type="number"
+              className="cf-form-input"
+              value={settings.portStart}
+              min={1024}
+              max={65535}
+              onChange={(e) => save({ portStart: e.target.value })}
+              style={{ fontFamily: "var(--font-mono)", maxWidth: 200 }}
+            />
+            {!isPortValid && (
+              <span style={{ color: "var(--cf-red)", fontSize: 12 }}>
+                Please specify a valid port number between 1024 and 65535.
+              </span>
+            )}
+            <span className="cf-form-help">
+              Preview: Active tunnels will bind locally to <code style={{ fontFamily: "var(--font-mono)" }}>localhost:{portNum}</code> through <code style={{ fontFamily: "var(--font-mono)" }}>localhost:{portNum + 10}</code>.
+            </span>
+          </div>
+        </div>
+
+        <div className="cf-card-footer">
+          <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Port range validity: {isPortValid ? "Valid" : "Invalid"}</span>
+          <button className="btn-cf-secondary" onClick={() => save({})}>
+            Save
+          </button>
+        </div>
       </div>
 
-      <div className="section danger">
-        <p className="eyebrow">Danger zone</p>
-        <p className="muted">This clears stored token, account, and local data.</p>
-        <button className="danger-btn" onClick={() => { void clearAll(); }}>Clear all data</button>
-      </div>
-    </div>
-  );
-}
+      {/* ─── Card 3: Display Filters ─── */}
+      <div className="cf-card">
+        <div className="cf-card-header">
+          <div className="cf-card-title">Display Preferences & Protocol Filters</div>
+          <div className="cf-card-desc">
+            Filter out specific protocol types and edge metadata from the dashboard list.
+          </div>
+        </div>
 
-function ToggleRow({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <div className="toggle-row">
-      <div>
-        <div className="toggle-label">{label}</div>
+        <div className="cf-card-body" style={{ padding: "0 18px" }}>
+          <div className="cf-switch-row">
+            <div>
+              <div className="cf-form-label">Hide HTTP / HTTPS Ingress Rules</div>
+              <div className="cf-form-help">Only show SSH and TCP endpoints in the tunnels table</div>
+            </div>
+            <button
+              type="button"
+              className={`cf-switch ${settings.hideHttp ? "on" : ""}`}
+              onClick={() => save({ hideHttp: !settings.hideHttp })}
+            >
+              <span />
+            </button>
+          </div>
+
+          <div className="cf-switch-row">
+            <div>
+              <div className="cf-form-label">Hide IP & Edge Colocation Metadata</div>
+              <div className="cf-form-help">Hide origin IP addresses and datacenter codes from table rows</div>
+            </div>
+            <button
+              type="button"
+              className={`cf-switch ${settings.hideIp ? "on" : ""}`}
+              onClick={() => save({ hideIp: !settings.hideIp })}
+            >
+              <span />
+            </button>
+          </div>
+
+          <div className="cf-switch-row">
+            <div>
+              <div className="cf-form-label">Hide Offline / Inactive Tunnels</div>
+              <div className="cf-form-help">Only display tunnels with healthy active connections</div>
+            </div>
+            <button
+              type="button"
+              className={`cf-switch ${settings.hideOffline ? "on" : ""}`}
+              onClick={() => save({ hideOffline: !settings.hideOffline })}
+            >
+              <span />
+            </button>
+          </div>
+        </div>
+
+        <div className="cf-card-footer">
+          <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+            Daemon: {cloudflaredVersion || "Not detected in system PATH"}
+          </span>
+        </div>
       </div>
-      <button className={`switch ${checked ? "on" : ""}`} onClick={() => onChange(!checked)}>
-        <span />
-      </button>
-    </div>
+
+      {/* ─── Card 4: Danger Zone ─── */}
+      <div className="cf-card" style={{ borderColor: "var(--cf-red-border)" }}>
+        <div className="cf-card-header">
+          <div className="cf-card-title" style={{ color: "var(--cf-red)" }}>Clear Stored Application Data</div>
+          <div className="cf-card-desc">
+            Disconnects all active local tunnel proxies and clears your stored API token and account settings.
+          </div>
+        </div>
+
+        <div className="cf-card-footer">
+          <span style={{ fontSize: 12, color: "var(--text-muted)" }}>This action cannot be undone.</span>
+          <button
+            className="btn-cf-danger"
+            onClick={handleClearAll}
+            disabled={clearing}
+          >
+            <TrashIcon size={13} />
+            <span>{clearing ? "Clearing Data…" : "Clear Stored Data"}</span>
+          </button>
+        </div>
+      </div>
+    </>
   );
 }

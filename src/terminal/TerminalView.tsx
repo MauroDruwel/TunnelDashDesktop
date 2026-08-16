@@ -6,7 +6,7 @@ import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { DEMO_MODE, sshResize, sshWrite } from "../api";
 import type { SshSession } from "../ssh/sessions";
 
-const MONO = 'ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace';
+const MONO = '"JetBrains Mono", ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace';
 
 export function TerminalView({ session, active }: { session: SshSession; active: boolean }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -19,12 +19,33 @@ export function TerminalView({ session, active }: { session: SshSession; active:
 
     const term = new Terminal({
       cursorBlink: true,
+      cursorStyle: "block",
       fontFamily: MONO,
       fontSize: 13,
-      scrollback: 4000,
+      lineHeight: 1.35,
+      scrollback: 5000,
       theme: {
-        background: "#101014",
-        foreground: "#e8e8ed",
+        background: "#0D1117",
+        foreground: "#E2E8F0",
+        cursor: "#F38020",
+        cursorAccent: "#0D1117",
+        selectionBackground: "rgba(243, 128, 32, 0.35)",
+        black: "#0D1117",
+        red: "#EF4444",
+        green: "#10B981",
+        yellow: "#F59E0B",
+        blue: "#3B82F6",
+        magenta: "#A855F7",
+        cyan: "#06B6D4",
+        white: "#F8FAFC",
+        brightBlack: "#475569",
+        brightRed: "#F87171",
+        brightGreen: "#34D399",
+        brightYellow: "#FBBF24",
+        brightBlue: "#60A5FA",
+        brightMagenta: "#C084FC",
+        brightCyan: "#22D3EE",
+        brightWhite: "#FFFFFF",
       },
     });
     const fit = new FitAddon();
@@ -86,12 +107,18 @@ export function TerminalView({ session, active }: { session: SshSession; active:
 function demoShellOutput(): string {
   const line = (s: string) => `${s}\r\n`;
   return (
-    line("Welcome to Ubuntu 24.04.1 LTS (GNU/Linux 6.8.0-51-generic x86_64)")
+    line("\x1b[38;2;243;128;32m┌─────────────────────────────────────────────────────────────┐\x1b[0m")
+    + line("\x1b[38;2;243;128;32m│\x1b[0m  \x1b[1;37mCloudflare Zero Trust SSH Tunnel Session\x1b[0m                    \x1b[38;2;243;128;32m│\x1b[0m")
+    + line("\x1b[38;2;243;128;32m│\x1b[0m  Host: \x1b[36mprod-db.corp.example.com\x1b[0m · Edge: \x1b[32mBRU, FRA\x1b[0m             \x1b[38;2;243;128;32m│\x1b[0m")
+    + line("\x1b[38;2;243;128;32m└─────────────────────────────────────────────────────────────┘\x1b[0m")
+    + line("")
+    + line("Welcome to Ubuntu 24.04.1 LTS (GNU/Linux 6.8.0-51-generic x86_64)")
     + line("")
     + line(" * Documentation:  https://help.ubuntu.com")
     + line(" * Management:     https://landscape.canonical.com")
+    + line(" * Support:        https://ubuntu.com/pro")
     + line("")
-    + line("Last login: Fri Aug 14 09:12:07 2026 from 10.0.0.24")
+    + line("Last login: Fri Aug 14 09:12:07 2026 from 172.70.110.4 (Cloudflare Edge)")
     + line("")
     + "user@prod-db:~$ \x1b[0m"
   );

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ApiStep, PortStep, SetupStep, WelcomeStep } from "./setup/Steps";
 import { Settings } from "./types";
+import { CloudflareLogo } from "./components/icons";
 
 export function SetupScreen({
   settings,
@@ -25,15 +26,49 @@ export function SetupScreen({
     const step = new URLSearchParams(window.location.search).get("step");
     return step === "port" || step === "api" ? step : "welcome";
   });
-  const stepIndex = ["welcome", "port", "api"].indexOf(setupStep) + 1;
+
+  const stepOrder: SetupStep[] = ["welcome", "port", "api"];
+  const currentStepIndex = stepOrder.indexOf(setupStep);
 
   if (verified) return null;
 
   return (
-    <div className="setup-screen">
-      <div className="card setup-card">
-        <div className="progress-text">Step {stepIndex} of 3</div>
+    <div className="cf-setup-container">
+      <div className="cf-setup-card">
+        {/* Brand Header */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <CloudflareLogo size={24} />
+          <div>
+            <div style={{ fontWeight: 700, fontSize: 16 }}>TunnelDash</div>
+            <div style={{ fontSize: 12, color: "var(--text-muted)" }}>Cloudflare Zero Trust Setup</div>
+          </div>
+        </div>
+
+        {/* Stepper Header */}
+        <div className="cf-setup-stepper">
+          <div className={`cf-step-item ${currentStepIndex === 0 ? "active" : ""}`}>
+            <span className="cf-step-num">1</span>
+            <span>Welcome</span>
+          </div>
+
+          <div className="cf-step-line" />
+
+          <div className={`cf-step-item ${currentStepIndex === 1 ? "active" : ""}`}>
+            <span className="cf-step-num">2</span>
+            <span>Port</span>
+          </div>
+
+          <div className="cf-step-line" />
+
+          <div className={`cf-step-item ${currentStepIndex === 2 ? "active" : ""}`}>
+            <span className="cf-step-num">3</span>
+            <span>API Token</span>
+          </div>
+        </div>
+
+        {/* Step Contents */}
         {setupStep === "welcome" && <WelcomeStep onNext={() => setSetupStep("port")} />}
+
         {setupStep === "port" && (
           <PortStep
             port={settings.portStart}
@@ -43,6 +78,7 @@ export function SetupScreen({
             valid={isPortValid}
           />
         )}
+
         {setupStep === "api" && (
           <ApiStep
             apiKey={settings.apiKey}

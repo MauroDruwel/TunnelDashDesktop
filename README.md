@@ -36,10 +36,10 @@ If you use Cloudflared Tunnels for infrastructure access, you know the pain of t
 
 ## 📸 Screenshots
 
-| Tunnels | SSH on a rule | Terminal |
+| Tunnels | Terminal | Settings |
 |---|---|---|
-| <img width="280" alt="Screenshot" src="https://raw.githubusercontent.com/MauroDruwel/TunnelDashDesktop/main/docs/screenshots/tunnels.png" /> | <img width="280" alt="Screenshot" src="https://raw.githubusercontent.com/MauroDruwel/TunnelDashDesktop/main/docs/screenshots/tunnels-ssh.png" /> | <img width="280" alt="Screenshot" src="https://raw.githubusercontent.com/MauroDruwel/TunnelDashDesktop/main/docs/screenshots/terminal.png" /> |
-| <img width="280" alt="Screenshot" src="https://raw.githubusercontent.com/MauroDruwel/TunnelDashDesktop/main/docs/screenshots/tunnels-dark.png" /> | <img width="280" alt="Screenshot" src="https://raw.githubusercontent.com/MauroDruwel/TunnelDashDesktop/main/docs/screenshots/settings.png" /> |  |
+| <img width="280" alt="Screenshot" src="https://raw.githubusercontent.com/MauroDruwel/TunnelDashDesktop/main/docs/screenshots/tunnels.png" /> | <img width="280" alt="Screenshot" src="https://raw.githubusercontent.com/MauroDruwel/TunnelDashDesktop/main/docs/screenshots/terminal.png" /> | <img width="280" alt="Screenshot" src="https://raw.githubusercontent.com/MauroDruwel/TunnelDashDesktop/main/docs/screenshots/settings.png" /> |
+| <img width="280" alt="Screenshot" src="https://raw.githubusercontent.com/MauroDruwel/TunnelDashDesktop/main/docs/screenshots/tunnels-dark.png" /> |  |  |
 
 ### Setup Screenshots
 
