@@ -120,6 +120,7 @@ html, body {
 .cf-kumo-sidebar.collapsed {
   width: var(--sidebar-width-collapsed);
   min-width: var(--sidebar-width-collapsed);
+  border-right: none;
 }
 
 /* Collapsed header: centre logo + toggle, stack vertically */
@@ -174,7 +175,7 @@ html.mac .cf-kumo-sidebar-drag {
 }
 html.mac .cf-kumo-main-drag {
   display: block;
-  height: 42px;
+  height: 28px;
 }
 
 .cf-logo-link {
