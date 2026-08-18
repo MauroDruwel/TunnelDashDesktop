@@ -308,6 +308,7 @@ export function App() {
 
       {/* ─── Main Content Area (Full Resolution) ─── */}
       <main className="cf-kumo-main">
+        <div className="cf-kumo-main-drag" data-tauri-drag-region />
         <div className="cf-kumo-content-container">
           {!verified ? (
             <SetupScreen

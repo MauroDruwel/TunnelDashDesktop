@@ -167,6 +167,16 @@ html.mac .cf-kumo-sidebar-drag {
   height: 52px;
 }
 
+/* macOS overlay title bar: full-width draggable strip above the content */
+.cf-kumo-main-drag {
+  display: none;
+  flex-shrink: 0;
+}
+html.mac .cf-kumo-main-drag {
+  display: block;
+  height: 42px;
+}
+
 .cf-logo-link {
   display: flex;
   align-items: center;
@@ -452,7 +462,8 @@ html.mac .cf-kumo-sidebar-drag {
   overflow-y: auto;
   height: 100vh;
 }
-html.mac .cf-kumo-main { padding-top: 42px; }
+html.mac .cf-kumo-main { padding-top: 0; }
+html.mac .cf-kumo-main .cf-kumo-content-container { padding-top: 24px; }
 
 .cf-kumo-content-container {
   width: 100%;
