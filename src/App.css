@@ -121,6 +121,10 @@ html, body {
   width: var(--sidebar-width-collapsed);
   min-width: var(--sidebar-width-collapsed);
   border-right: none;
+  background-image: linear-gradient(to bottom, transparent 52px, var(--kumo-line) 52px);
+  background-size: 1px calc(100% - 52px);
+  background-position: right top;
+  background-repeat: no-repeat;
 }
 
 /* Collapsed header: centre logo + toggle, stack vertically */
