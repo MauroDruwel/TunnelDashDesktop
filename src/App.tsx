@@ -128,7 +128,9 @@ export function App() {
     settings.accountName ||
     (settings.accountId ? `Account: ${settings.accountId.slice(0, 8)}…` : "Not connected");
 
-  if (!verified) {
+  // Full-screen onboarding only when there's no account yet — re-verifying a
+  // token from Settings must NOT kick the user back to the setup wizard.
+  if (!verified && !settings.accountId) {
     return (
       <div className="cf-setup-fullscreen">
         <div className="cf-setup-theme-toggle">

@@ -63,7 +63,6 @@ export function useTunnelState() {
     if (!settings.apiKey.trim()) return;
     setError(null);
     setVerifying(true);
-    setVerified(false);
     try {
       // Only call the Rust side once; we reuse the first account returned as the selected account.
       const accounts = await fetchAccounts(settings.apiKey.trim());
