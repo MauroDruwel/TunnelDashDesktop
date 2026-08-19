@@ -8,6 +8,7 @@ export const DEFAULT_SETTINGS: Settings = {
   hideHttp: false,
   hideIp: false,
   hideOffline: false,
+  tunnelDescription: "id",
 };
 
 export type PersistedSettings = Settings & { verified?: boolean };

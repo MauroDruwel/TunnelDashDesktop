@@ -55,6 +55,42 @@ export function TunnelsScreen({
     setExpandedTunnels((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
+  const renderTunnelDescription = (
+    mode: Settings["tunnelDescription"],
+    tunnel: TunnelSummary,
+    copied: string | null,
+    copy: (text: string, key: string) => void
+  ) => {
+    if (mode === "none") return null;
+    if (mode === "ip") {
+      return (
+        <span className="cf-uuid-text" style={{ color: "var(--kumo-subtle)" }}>
+          {tunnel.connectionIp || "—"}
+        </span>
+      );
+    }
+    return (
+      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        <span className="cf-uuid-text">{tunnel.id}</span>
+        <button
+          type="button"
+          className="cf-copy-btn"
+          title="Copy Tunnel ID"
+          onClick={(e) => {
+            e.stopPropagation();
+            copy(tunnel.id, `tunnel-${tunnel.id}`);
+          }}
+        >
+          {copied === `tunnel-${tunnel.id}` ? (
+            <CheckIcon size={12} style={{ color: "var(--cf-green-5)" }} />
+          ) : (
+            <CopyIcon size={12} />
+          )}
+        </button>
+      </div>
+    );
+  };
+
   const filteredTunnels = useMemo(() => {
     return tunnels.filter((t) => {
       const isHealthy = (t.status || "").toLowerCase() === "healthy";
@@ -203,29 +239,12 @@ export function TunnelsScreen({
                         }}
                         onClick={() => toggleTunnelExpand(tunnel.id)}
                       >
-                        {/* Name & ID */}
+                        {/* Name & Description */}
                         <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                           <div style={{ fontWeight: 600, fontSize: 13.5, color: "var(--kumo-default)" }}>
                             {tunnel.name}
                           </div>
-                          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                            <span className="cf-uuid-text">{tunnel.id}</span>
-                            <button
-                              type="button"
-                              className="cf-copy-btn"
-                              title="Copy Tunnel ID"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                copyToClipboard(tunnel.id, `tunnel-${tunnel.id}`);
-                              }}
-                            >
-                              {copiedKey === `tunnel-${tunnel.id}` ? (
-                                <CheckIcon size={12} style={{ color: "var(--cf-green-5)" }} />
-                              ) : (
-                                <CopyIcon size={12} />
-                              )}
-                            </button>
-                          </div>
+                          {renderTunnelDescription(settings.tunnelDescription, tunnel, copiedKey, copyToClipboard)}
                         </div>
 
                         {/* Status */}
@@ -246,7 +265,7 @@ export function TunnelsScreen({
                                 </span>
                               ))
                             ) : (
-                              <span style={{ fontSize: 12, color: "var(--kumo-subtle)" }}>Global Anycast</span>
+                              <span style={{ fontSize: 12, color: "var(--kumo-subtle)" }}>—</span>
                             )}
                           </div>
                         )}

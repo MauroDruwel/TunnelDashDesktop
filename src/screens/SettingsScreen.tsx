@@ -234,6 +234,25 @@ export function SettingsScreen({
               <span />
             </button>
           </div>
+
+          <div className="cf-switch-row" style={{ flexWrap: "wrap", gap: 8 }}>
+            <div>
+              <div className="cf-form-label">Tunnel description shows</div>
+              <div className="cf-form-help">What appears under each tunnel name in the list</div>
+            </div>
+            <select
+              className="cf-form-input"
+              style={{ width: "auto", minWidth: 160, cursor: "pointer" }}
+              value={settings.tunnelDescription ?? "id"}
+              onChange={(e) =>
+                save({ tunnelDescription: e.target.value as "id" | "ip" | "none" })
+              }
+            >
+              <option value="id">Tunnel ID</option>
+              <option value="ip">Origin IP</option>
+              <option value="none">Blank</option>
+            </select>
+          </div>
         </div>
 
         <div className="cf-card-footer">

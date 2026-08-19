@@ -27,6 +27,8 @@ export type TunnelSummary = {
   coloNames?: string[];
 };
 
+export type TunnelDescription = "id" | "ip" | "none";
+
 export type Settings = {
   apiKey: string;
   accountId?: string;
@@ -35,6 +37,7 @@ export type Settings = {
   hideHttp: boolean;
   hideIp: boolean;
   hideOffline: boolean;
+  tunnelDescription?: TunnelDescription;
   sshLast?: SshPrefs;
 };
 
