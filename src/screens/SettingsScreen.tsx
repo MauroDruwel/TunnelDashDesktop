@@ -117,10 +117,11 @@ export function SettingsScreen({
               className="cf-form-input"
               value={settings.accountId || ""}
               placeholder="Will populate automatically upon token verification"
-              onChange={(e) => save({ accountId: e.target.value })}
-              style={{ fontFamily: "var(--font-mono)" }}
+              readOnly
+              onFocus={(e) => e.target.select()}
+              style={{ fontFamily: "var(--font-mono)", opacity: 0.8, cursor: "default" }}
             />
-            <span className="cf-form-help">Automatically retrieved from GET /accounts on verify.</span>
+            <span className="cf-form-help">Read-only — automatically retrieved from GET /accounts when you verify the token.</span>
           </div>
         </div>
 

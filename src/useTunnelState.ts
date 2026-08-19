@@ -134,6 +134,15 @@ export function useTunnelState() {
     }
   }, [verified, settings.apiKey, settings.accountId, loadTunnels]);
 
+  // Auto-refresh tunnels every 5 minutes while verified.
+  useEffect(() => {
+    if (!verified || !settings.apiKey || !settings.accountId) return;
+    const timer = window.setInterval(() => {
+      void loadTunnels();
+    }, 5 * 60 * 1000);
+    return () => window.clearInterval(timer);
+  }, [verified, settings.apiKey, settings.accountId, loadTunnels]);
+
   const loadCloudflaredVersion = async () => {
     try {
       const ver = await fetchCloudflaredVersion();
