@@ -56,6 +56,7 @@ export function useTunnelState() {
     // Persist immediately so reloads keep whatever the user just typed.
     const next: Settings = { ...settings, ...patch } as Settings;
     setSettings(next);
+    if (patch.verified !== undefined) setVerified(patch.verified);
     void persistSettings(next, patch.verified ?? verified);
   };
 

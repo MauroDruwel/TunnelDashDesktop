@@ -171,7 +171,7 @@ export function SettingsScreen({
               </span>
             )}
             <span className="cf-form-help">
-              Preview: Active tunnels will bind locally to <code style={{ fontFamily: "var(--font-mono)" }}>localhost:{portNum}</code> through <code style={{ fontFamily: "var(--font-mono)" }}>localhost:{portNum + 10}</code>.
+              Active tunnels bind locally starting at <code style={{ fontFamily: "var(--font-mono)" }}>localhost:{portNum}</code>, incrementing by one for each tunnel.
             </span>
           </div>
         </div>
