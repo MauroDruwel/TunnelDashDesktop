@@ -14,13 +14,13 @@ jobs:
     runs-on: ${{ matrix.platform }}
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           version: 10
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: pnpm
@@ -38,17 +38,27 @@ jobs:
         run: node scripts/download-cloudflared.mjs
 
       - name: Build (dev / unsigned)
-        uses: tauri-apps/tauri-action@v0
+        uses: tauri-apps/tauri-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           projectPath: .
           tauriScript: pnpm tauri
 
+      - name: Build tunneldash-cli
+        shell: bash
+        run: |
+          cd src-tauri
+          cargo build --release --features cli --bin tunneldash-cli
+          BIN="target/release/tunneldash-cli"
+          if [ "$RUNNER_OS" = "Windows" ]; then BIN="$BIN.exe"; fi
+          cp "$BIN" "$GITHUB_WORKSPACE/tunneldash-cli-${{ runner.os }}"
+
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: tauri-bundles-${{ runner.os }}
           path: |
             src-tauri/target/release/bundle/**
+            tunneldash-cli-${{ runner.os }}
           if-no-files-found: error

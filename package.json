@@ -1,8 +1,27 @@
 {
   "name": "tunneldash",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.4.0",
   "type": "module",
+  "description": "Tiny Cloudflare Tunnel sidekick with native SSH terminal launching (Tauri + React)",
+  "author": "Mauro Druwel",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MauroDruwel/TunnelDashDesktop.git"
+  },
+  "homepage": "https://github.com/MauroDruwel/TunnelDashDesktop#readme",
+  "bugs": {
+    "url": "https://github.com/MauroDruwel/TunnelDashDesktop/issues"
+  },
+  "keywords": [
+    "cloudflare",
+    "tunnel",
+    "cloudflared",
+    "ssh",
+    "tauri",
+    "zero-trust"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
@@ -15,9 +34,8 @@
   },
   "dependencies": {
     "@tauri-apps/api": "^2.11.1",
+    "@tauri-apps/plugin-autostart": "^2.5.1",
     "@tauri-apps/plugin-store": "^2.4.4",
-    "@xterm/addon-fit": "^0.11.0",
-    "@xterm/xterm": "^6.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },

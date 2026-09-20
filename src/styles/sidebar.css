@@ -1,0 +1,358 @@
+/* ─── Kumo Sidebar Navigation ─────────────────────────────────────────────── */
+.cf-kumo-sidebar {
+  width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
+  background-color: var(--kumo-canvas);
+  border-right: 1px solid var(--kumo-line);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  user-select: none;
+  z-index: 40;
+  transition: width var(--sidebar-animation), min-width var(--sidebar-animation);
+  overflow: hidden;
+}
+
+.cf-kumo-sidebar.collapsed {
+  width: var(--sidebar-width-collapsed);
+  min-width: var(--sidebar-width-collapsed);
+  border-right: none;
+  background-image: linear-gradient(to bottom, transparent 52px, var(--kumo-line) 52px);
+  background-size: 1px 100%;
+  background-position: right top;
+  background-repeat: no-repeat;
+}
+
+/* Collapsed header: centre logo + toggle, stack vertically */
+.cf-kumo-sidebar.collapsed .cf-kumo-sidebar-header {
+  padding: 0 4px;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  flex-direction: column;
+  height: auto;
+  min-height: var(--sidebar-header-height);
+}
+
+.cf-kumo-sidebar.collapsed .cf-logo-link {
+  padding-left: 0;
+  justify-content: center;
+  width: 100%;
+}
+
+.cf-collapsed-logo {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  display: block;
+}
+
+
+.cf-kumo-sidebar-header {
+  height: var(--sidebar-header-height);
+  border-bottom: 1px solid var(--kumo-line);
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* macOS overlay title bar: draggable strip above the sidebar header */
+.cf-kumo-sidebar-drag {
+  display: none;
+  flex-shrink: 0;
+}
+html.mac .cf-kumo-sidebar-drag {
+  display: block;
+  height: 52px;
+}
+
+/* macOS overlay title bar: full-width draggable strip above the content */
+.cf-kumo-main-drag {
+  display: none;
+  flex-shrink: 0;
+}
+html.mac .cf-kumo-main-drag {
+  display: block;
+  height: 28px;
+}
+
+.cf-logo-link {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  cursor: pointer;
+  padding-left: 2px;
+  flex-shrink: 0;
+}
+
+.cf-account-switcher-btn {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--kumo-default);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  text-align: left;
+}
+
+.cf-account-switcher-btn:hover {
+  background-color: var(--kumo-tint);
+}
+
+.cf-account-title {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--kumo-default);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.cf-account-caret {
+  color: var(--kumo-subtle);
+  flex-shrink: 0;
+}
+
+.cf-sidebar-toggle-btn {
+  background: transparent;
+  border: none;
+  color: var(--kumo-subtle);
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  flex-shrink: 0;
+}
+
+.cf-sidebar-toggle-btn:hover {
+  background-color: var(--kumo-tint);
+  color: var(--kumo-default);
+}
+
+.cf-kumo-sidebar-body {
+  flex: 1;
+  padding: 12px 10px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Collapsed body: remove side padding, centre children */
+.cf-kumo-sidebar.collapsed .cf-kumo-sidebar-body {
+  padding: 12px 0;
+  align-items: center;
+}
+
+
+/* Quick Search Button in Sidebar */
+.cf-quick-search-btn {
+  width: 100%;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 8px;
+  background-color: var(--kumo-base);
+  border: 1px solid var(--kumo-line);
+  color: var(--kumo-subtle);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 400;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  margin-bottom: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.cf-kumo-sidebar.collapsed .cf-quick-search-btn {
+  padding: 0;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  margin: 0 0 6px 0;
+  flex-shrink: 0;
+}
+
+.cf-kumo-sidebar.collapsed .cf-quick-search-btn span,
+.cf-kumo-sidebar.collapsed .cf-quick-search-kbd {
+  display: none;
+}
+
+.cf-quick-search-btn:hover {
+  background-color: var(--kumo-tint);
+  color: var(--kumo-default);
+}
+
+.cf-quick-search-kbd {
+  margin-left: auto;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--kumo-subtle);
+}
+
+/* Nav Menu List */
+.cf-kumo-menu {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+}
+
+.cf-kumo-menu-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 34px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--kumo-default);
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.12s ease, color 0.12s ease;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.cf-kumo-sidebar.collapsed .cf-kumo-menu {
+  align-items: center;
+}
+
+.cf-kumo-sidebar.collapsed .cf-kumo-menu-link {
+  padding: 0;
+  justify-content: center;
+  align-items: center;
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+  border-radius: 8px;
+  overflow: visible;
+}
+
+.cf-kumo-sidebar.collapsed .cf-kumo-menu-link-inner span:not(.cf-kumo-menu-icon),
+.cf-kumo-sidebar.collapsed .cf-kumo-badge {
+  display: none;
+}
+
+.cf-kumo-sidebar.collapsed .cf-kumo-menu-link-inner {
+  gap: 0;
+  justify-content: center;
+}
+
+.cf-kumo-menu-link-inner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cf-kumo-menu-icon {
+  color: var(--kumo-subtle);
+  opacity: 0.65;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.cf-kumo-menu-link:hover:not(:disabled) {
+  background-color: var(--kumo-recessed);
+}
+
+.cf-kumo-menu-link:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.cf-kumo-menu-link.active {
+  background-color: var(--kumo-recessed);
+  color: var(--kumo-default);
+  font-weight: 600;
+}
+
+.cf-kumo-menu-link.active .cf-kumo-menu-icon {
+  color: var(--kumo-interactive);
+  opacity: 1;
+}
+
+.cf-kumo-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--kumo-tint);
+  color: var(--kumo-subtle);
+  flex-shrink: 0;
+}
+
+.cf-kumo-menu-link.active .cf-kumo-badge {
+  background: var(--kumo-interactive);
+  color: #FFFFFF;
+}
+
+/* Sidebar Footer */
+.cf-kumo-sidebar-footer {
+  padding: 12px 10px;
+  border-top: 1px solid var(--kumo-line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--kumo-subtle);
+}
+
+.cf-kumo-sidebar.collapsed .cf-kumo-sidebar-footer {
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 0;
+  justify-content: center;
+}
+
+.cf-kumo-sidebar.collapsed .cf-daemon-text {
+  display: none;
+}
+
+.cf-theme-toggle-btn {
+  background: transparent;
+  border: 1px solid var(--kumo-line);
+  color: var(--kumo-subtle);
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.cf-theme-toggle-btn:hover {
+  background-color: var(--kumo-tint);
+  color: var(--kumo-default);
+}
+

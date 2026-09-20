@@ -1,0 +1,16 @@
+/* ─── Responsive ─────────────────────────────────────────────────────────── */
+@media (max-width: 860px) {
+  .cf-kumo-app { flex-direction: column; }
+  .cf-kumo-sidebar {
+    width: 100% !important;
+    min-width: 100% !important;
+    height: auto;
+    position: static;
+    border-right: none;
+    border-bottom: 1px solid var(--kumo-line);
+  }
+  .cf-kumo-sidebar-body { flex-direction: row; flex-wrap: wrap; }
+  .cf-quick-search-btn { display: none; }
+  .cf-kumo-menu { flex-direction: row; }
+  .cf-kumo-main { padding: 20px 16px; }
+}

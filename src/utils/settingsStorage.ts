@@ -9,6 +9,9 @@ export const DEFAULT_SETTINGS: Settings = {
   hideIp: false,
   hideOffline: false,
   tunnelDescription: "id",
+  autoSyncSshConfig: true,
+  defaultSshUser: "",
+  defaultSshKeyPath: "",
 };
 
 export type PersistedSettings = Settings & { verified?: boolean };
@@ -63,9 +66,10 @@ async function clearStored(): Promise<void> {
 export async function loadSettings(): Promise<{ settings: Settings; verified: boolean }> {
   const saved = await readStored();
   if (!saved) return { settings: DEFAULT_SETTINGS, verified: false };
+  const { verified, ...rest } = saved;
   return {
-    settings: { ...DEFAULT_SETTINGS, ...saved },
-    verified: Boolean(saved.verified),
+    settings: { ...DEFAULT_SETTINGS, ...(rest as Settings) },
+    verified: Boolean(verified),
   };
 }
 

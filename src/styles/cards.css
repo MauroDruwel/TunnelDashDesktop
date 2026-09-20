@@ -1,0 +1,323 @@
+/* ─── Settings Card ──────────────────────────────────────────────────────── */
+.cf-card {
+  background-color: var(--kumo-canvas);
+  border: 1px solid var(--kumo-line);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  width: 100%;
+}
+
+.cf-card-header {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--kumo-line);
+  background-color: var(--kumo-canvas);
+}
+
+.cf-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--kumo-default);
+}
+
+.cf-card-desc {
+  font-size: 12.5px;
+  color: var(--kumo-subtle);
+  margin-top: 2px;
+}
+
+.cf-card-body {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.cf-card-footer {
+  padding: 12px 18px;
+  background-color: var(--kumo-base);
+  border-top: 1px solid var(--kumo-line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cf-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.cf-form-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--kumo-default);
+}
+
+.cf-form-help {
+  font-size: 12px;
+  color: var(--kumo-subtle);
+}
+
+.cf-form-input {
+  padding: 7px 10px;
+  border: 1px solid var(--kumo-line-strong);
+  border-radius: 6px;
+  font-size: 13px;
+  background-color: var(--kumo-canvas);
+  color: var(--kumo-default);
+  outline: none;
+}
+
+.cf-form-input:focus {
+  border-color: var(--kumo-interactive);
+  box-shadow: 0 0 0 2px var(--kumo-focus);
+}
+
+/* Switch Row */
+.cf-switch-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--kumo-line);
+}
+
+.cf-switch-row:last-child {
+  border-bottom: none;
+}
+
+.cf-switch {
+  width: 36px;
+  height: 20px;
+  border-radius: 10px;
+  background: var(--kumo-line-strong);
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  padding: 2px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.cf-switch span {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  transition: transform 0.15s ease;
+}
+
+.cf-switch.on {
+  background-color: var(--kumo-interactive);
+}
+
+.cf-switch.on span {
+  transform: translateX(16px);
+}
+
+/* ─── Cloudflare Metrics Ribbon ────────────────────────────────────────────── */
+.cf-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+  width: 100%;
+}
+
+@media (max-width: 860px) {
+  .cf-metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.cf-metric-card {
+  background-color: var(--kumo-canvas);
+  border: 1px solid var(--kumo-line);
+  border-radius: 8px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.cf-metric-card:hover {
+  border-color: var(--kumo-line-strong);
+}
+
+.cf-metric-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--kumo-subtle);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cf-metric-value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.cf-metric-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--kumo-default);
+  font-family: var(--font-sans);
+  letter-spacing: -0.02em;
+}
+
+.cf-metric-subtext {
+  font-size: 12px;
+  color: var(--kumo-subtle);
+}
+
+/* ─── Shimmer Skeleton Loaders ─────────────────────────────────────────────── */
+@keyframes cf-shimmer {
+  0% { opacity: 0.35; }
+  50% { opacity: 0.75; }
+  100% { opacity: 0.35; }
+}
+
+.cf-skeleton-bar {
+  height: 12px;
+  border-radius: 4px;
+  background-color: var(--kumo-line);
+  animation: cf-shimmer 1.8s ease-in-out infinite;
+}
+
+/* ─── Empty State Presentation ────────────────────────────────────────────── */
+.cf-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+  gap: 8px;
+}
+
+.cf-empty-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background-color: var(--kumo-base);
+  border: 1px solid var(--kumo-line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--kumo-subtle);
+  margin-bottom: 4px;
+}
+
+.cf-empty-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--kumo-default);
+}
+
+.cf-empty-desc {
+  font-size: 13px;
+  color: var(--kumo-subtle);
+  max-width: 360px;
+  line-height: 1.45;
+}
+
+/* ─── Pulse animation for healthy status ───────────────────────────────────── */
+@keyframes cf-pulse-glow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(45, 179, 94, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(45, 179, 94, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(45, 179, 94, 0);
+  }
+}
+
+.cf-status-badge.healthy .dot {
+  animation: cf-pulse-glow 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* ─── Interactive Alias Badge ──────────────────────────────────────────────── */
+.cf-alias-code {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--kumo-brand, #f6821f);
+  background: var(--kumo-tint);
+  padding: 3px 8px;
+  border-radius: 5px;
+  border: 1px solid var(--kumo-line);
+  cursor: pointer;
+  transition: all 0.12s ease;
+  user-select: none;
+}
+
+.cf-alias-code:hover {
+  background-color: var(--kumo-base);
+  border-color: var(--kumo-brand);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(246, 130, 31, 0.15);
+}
+
+.cf-alias-code.copied {
+  background-color: var(--cf-green-9);
+  color: var(--cf-green-5);
+  border-color: var(--cf-green-5);
+}
+
+/* Search input clear button */
+.cf-search-clear-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: var(--kumo-subtle);
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.cf-search-clear-btn:hover {
+  color: var(--kumo-default);
+  background-color: var(--kumo-tint);
+}
+
+/* ─── Vault Pill / Badge ─────────────────────────────────────────────────── */
+.cf-vault-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 12px;
+  background-color: var(--kumo-tint);
+  border: 1px solid var(--kumo-line);
+  color: var(--kumo-subtle);
+}
+
+.cf-vault-badge.active {
+  background-color: var(--cf-green-9);
+  color: var(--cf-green-5);
+  border-color: rgba(45, 179, 94, 0.25);
+}
+

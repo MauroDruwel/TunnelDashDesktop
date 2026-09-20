@@ -1,0 +1,25 @@
+/* ─── Global Reset ────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  min-height: 100vh;
+  width: 100%;
+  background-color: var(--kumo-canvas);
+  color: var(--kumo-default);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root, .cf-kumo-app {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+}
+

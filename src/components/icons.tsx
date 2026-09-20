@@ -4,6 +4,29 @@ export type IconProps = SVGProps<SVGSVGElement> & {
   size?: number;
 };
 
+// Simple X / close glyph.
+export function CloseIcon({ size = 14, className, ...props }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      {...props}
+    >
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  );
+}
+
+
+
 // Exact official Cloudflare Flame Dual-Cloud Logo from dash.cloudflare.com
 export function CloudflareLogo({ size = 32, className, ...props }: IconProps) {
   const height = (size * 271.2) / 460;
@@ -339,6 +362,30 @@ export function LockIcon({ size = 14, className, ...props }: IconProps) {
   );
 }
 
+export function KeyIcon({ size = 14, className, ...props }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+      {...props}
+    >
+      <path d="M15.5 10.5 18 8a4.95 4.95 0 1 0-7-7l-2.5 2.5" />
+      <circle cx="7.5" cy="7.5" r="2.5" />
+      <path d="m10 10 7 7" />
+      <path d="m14 14 3 3" />
+      <path d="m17 17 2 2" />
+    </svg>
+  );
+}
+
 export function EyeIcon({ size = 15, className, ...props }: IconProps) {
   return (
     <svg
@@ -447,6 +494,133 @@ export function MoonIcon({ size = 15, className, ...props }: IconProps) {
       {...props}
     >
       <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+    </svg>
+  );
+}
+
+export function ChevronDownIcon({ size = 14, className, ...props }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+      {...props}
+    >
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  );
+}
+
+export function PlayIcon({ size = 12, className, ...props }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className={className}
+      aria-hidden="true"
+      {...props}
+    >
+      <polygon points="5 3 19 12 5 21 5 3" />
+    </svg>
+  );
+}
+
+export function MonitorIcon({ size = 14, className, ...props }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+      {...props}
+    >
+      <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+      <line x1="8" y1="21" x2="16" y2="21" />
+      <line x1="12" y1="17" x2="12" y2="21" />
+    </svg>
+  );
+}
+
+export function FolderIcon({ size = 14, className, ...props }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+      {...props}
+    >
+      <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+    </svg>
+  );
+}
+
+export function CodeIcon({ size = 14, className, ...props }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+      {...props}
+    >
+      <polyline points="16 18 22 12 16 6" />
+      <polyline points="8 6 2 12 8 18" />
+    </svg>
+  );
+}
+
+export function BugIcon({ size = 14, className, ...props }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+      {...props}
+    >
+      <rect width="8" height="14" x="8" y="6" rx="4" />
+      <path d="m19 7-3 2" />
+      <path d="m5 7 3 2" />
+      <path d="m19 19-3-2" />
+      <path d="m5 19 3-2" />
+      <path d="M20 13h-4" />
+      <path d="M4 13h4" />
+      <path d="m10 4 1 2" />
+      <path d="m14 4-1 2" />
     </svg>
   );
 }

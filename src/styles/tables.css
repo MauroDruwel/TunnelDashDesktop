@@ -1,0 +1,371 @@
+/* ─── Cloudflare Data Table ──────────────────────────────────────────────── */
+.cf-table-card {
+  background-color: var(--kumo-canvas);
+  border: 1px solid var(--kumo-line);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  width: 100%;
+}
+
+.cf-table-toolbar {
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--kumo-line);
+  background-color: var(--kumo-canvas);
+  flex-wrap: wrap;
+}
+
+.cf-search-wrapper {
+  position: relative;
+  min-width: 280px;
+  max-width: 440px;
+  flex: 1;
+}
+
+.cf-search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--kumo-subtle);
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+}
+
+.cf-search-input {
+  width: 100%;
+  padding: 6px 10px 6px 32px;
+  border: 1px solid var(--kumo-line-strong);
+  border-radius: 6px;
+  background-color: var(--kumo-canvas);
+  color: var(--kumo-default);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.12s ease;
+}
+
+.cf-search-input:focus {
+  border-color: var(--kumo-interactive);
+  box-shadow: 0 0 0 2px var(--kumo-focus);
+}
+
+.cf-filter-tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cf-filter-tab {
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--kumo-subtle);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.cf-filter-tab:hover {
+  background-color: var(--kumo-tint);
+  color: var(--kumo-default);
+}
+
+.cf-filter-tab.active {
+  background-color: var(--kumo-base);
+  border-color: var(--kumo-line);
+  color: var(--kumo-default);
+  font-weight: 600;
+}
+
+/* ─── Real Cloudflare Table ──────────────────────────────────────────────── */
+.cf-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13px;
+}
+
+.cf-table th {
+  background-color: var(--kumo-base);
+  color: var(--kumo-subtle);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--kumo-line);
+  white-space: nowrap;
+}
+
+.cf-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--kumo-line);
+  vertical-align: middle;
+  color: var(--kumo-default);
+}
+
+.cf-table tr:last-child td {
+  border-bottom: none;
+}
+
+.cf-table tbody tr:hover {
+  background-color: var(--kumo-tint);
+}
+
+/* Status Badge */
+.cf-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.cf-status-badge .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: currentColor;
+}
+
+.cf-status-badge.healthy {
+  background-color: var(--cf-green-9);
+  color: var(--cf-green-5);
+}
+
+.cf-status-badge.down {
+  background-color: var(--cf-red-9);
+  color: var(--cf-red-5);
+}
+
+/* Protocol Tag */
+.cf-proto-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  background-color: var(--kumo-base);
+  border: 1px solid var(--kumo-line);
+  color: var(--kumo-subtle);
+}
+
+.cf-proto-tag.ssh {
+  background-color: #FEF3C7;
+  color: #92400E;
+  border-color: #FDE68A;
+}
+
+html.dark-theme .cf-proto-tag.ssh {
+  background-color: #78350F;
+  color: #FDE68A;
+  border-color: #92400E;
+}
+
+.cf-proto-tag.http, .cf-proto-tag.https {
+  background-color: var(--cf-green-9);
+  color: var(--cf-green-5);
+}
+
+.cf-proto-tag.tcp {
+  background-color: var(--cf-blue-9);
+  color: var(--cf-blue-5);
+}
+
+.cf-proto-tag.rdp {
+  background-color: #E0E7FF;
+  color: #3730A3;
+  border-color: #C7D2FE;
+}
+
+html.dark-theme .cf-proto-tag.rdp {
+  background-color: #312E81;
+  color: #C7D2FE;
+  border-color: #4338CA;
+}
+
+.cf-proto-tag.smb {
+  background-color: #CFFAFE;
+  color: #155E75;
+  border-color: #A5F3FC;
+}
+
+html.dark-theme .cf-proto-tag.smb {
+  background-color: #164E63;
+  color: #A5F3FC;
+  border-color: #0891B2;
+}
+
+.cf-proto-tag.unix, .cf-proto-tag.unix-tls {
+  background-color: #EDE9FE;
+  color: #5B21B6;
+  border-color: #DDD6FE;
+}
+
+html.dark-theme .cf-proto-tag.unix, html.dark-theme .cf-proto-tag.unix-tls {
+  background-color: #4C1D95;
+  color: #DDD6FE;
+  border-color: #6D28D9;
+}
+
+.cf-proto-tag.bastion {
+  background-color: #FFEDD5;
+  color: #9A3412;
+  border-color: #FED7AA;
+}
+
+html.dark-theme .cf-proto-tag.bastion {
+  background-color: #7C2D12;
+  color: #FED7AA;
+  border-color: #9A3412;
+}
+
+.cf-uuid-text {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--kumo-subtle);
+}
+
+.cf-hostname-link {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--kumo-interactive);
+  text-decoration: none;
+}
+
+.cf-hostname-link:hover {
+  text-decoration: underline;
+}
+
+.cf-copy-btn {
+  background: transparent;
+  border: none;
+  color: var(--kumo-subtle);
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.cf-copy-btn:hover {
+  color: var(--kumo-default);
+  background-color: var(--kumo-tint);
+}
+
+/* Clickable Route Rows */
+.cf-clickable-route {
+  transition: background-color 0.12s ease;
+}
+
+.cf-clickable-route:hover {
+  background-color: var(--kumo-tint) !important;
+}
+
+/* Route Protocol Dropdown Multi-Select */
+.cf-filter-dropdown-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.cf-filter-dropdown-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--kumo-line);
+  background-color: var(--kumo-base);
+  color: var(--kumo-default);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.cf-filter-dropdown-btn:hover {
+  background-color: var(--kumo-tint);
+  border-color: var(--kumo-line-strong);
+}
+
+.cf-filter-dropdown-btn.active {
+  border-color: var(--cf-orange-5);
+  color: var(--cf-orange-5);
+  background-color: rgba(246, 130, 31, 0.08);
+}
+
+.cf-filter-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 210px;
+  background-color: var(--kumo-canvas);
+  border: 1px solid var(--kumo-line-strong);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+  padding: 6px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cf-filter-dropdown-header {
+  padding: 6px 8px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--kumo-subtle);
+  letter-spacing: 0.5px;
+}
+
+.cf-filter-dropdown-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 5px;
+  font-size: 12.5px;
+  color: var(--kumo-default);
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.1s ease;
+}
+
+.cf-filter-dropdown-item:hover {
+  background-color: var(--kumo-tint);
+}
+
+.cf-filter-dropdown-item input[type="checkbox"] {
+  cursor: pointer;
+  accent-color: var(--cf-orange-5);
+}
+
+.cf-filter-dropdown-count {
+  font-size: 11px;
+  color: var(--kumo-subtle);
+  font-family: var(--font-mono);
+  background: var(--kumo-base);
+  padding: 1px 6px;
+  border-radius: 10px;
+  border: 1px solid var(--kumo-line);
+}
+

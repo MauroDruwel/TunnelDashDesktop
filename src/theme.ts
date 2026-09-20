@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 
 export type Theme = "dark" | "light";
 
-const THEME_KEY = "tunneldash:theme";
+// Shared storage key used by App.tsx and any component that needs theme
+export const THEME_KEY = "cf-theme";
 
-function applyTheme(theme: Theme) {
+export function applyTheme(theme: Theme) {
   const root = document.documentElement;
   root.classList.toggle("dark-theme", theme === "dark");
+  // Keep light-theme toggle for compatibility but primary check is dark-theme
   root.classList.toggle("light-theme", theme === "light");
 }
 

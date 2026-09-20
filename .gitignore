@@ -7,10 +7,19 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies & build output
 node_modules
 dist
 dist-ssr
 *.local
+.env
+.env.*
+!.env.example
+
+# Rust / Tauri
+src-tauri/target/
+# Downloaded sidecar binaries (regenerate with scripts/download-cloudflared.mjs)
+src-tauri/binaries/
 
 # Editor directories and files
 .vscode/*
@@ -23,5 +32,5 @@ dist-ssr
 *.sln
 *.sw?
 
-# Downloaded sidecar binaries (regenerate with scripts/download-cloudflared.mjs)
-src-tauri/binaries/
+# OS
+Thumbs.db

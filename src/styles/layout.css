@@ -1,0 +1,57 @@
+/* ─── Main Content Canvas (Full Resolution / Fluid Width) ─────────────────── */
+.cf-kumo-main {
+  flex: 1;
+  min-width: 0;
+  background-color: var(--kumo-canvas);
+  padding: 24px 36px 60px;
+  overflow-y: auto;
+  height: 100vh;
+}
+html.mac .cf-kumo-main { padding-top: 0; }
+html.mac .cf-kumo-main .cf-kumo-content-container { padding-top: 24px; }
+
+.cf-kumo-content-container {
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ─── Cloudflare Header ───────────────────────────────────────────────────── */
+.cf-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.cf-breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--kumo-subtle);
+  margin-bottom: 4px;
+}
+
+.cf-breadcrumbs span.current {
+  color: var(--kumo-default);
+  font-weight: 500;
+}
+
+h1.cf-page-title {
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  color: var(--kumo-default);
+}
+
+.cf-page-subtitle {
+  font-size: 13.5px;
+  color: var(--kumo-subtle);
+  margin-top: 4px;
+}
+

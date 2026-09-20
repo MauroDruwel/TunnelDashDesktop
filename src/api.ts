@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
+import type { TunnelCommandDetails } from "./types";
 export type Account = { id: string; name: string };
 export type Tunnel = {
   id: string;
@@ -114,6 +115,21 @@ export async function fetchTunnelConfig(token: string, accountId: string, tunnel
   return data || {};
 }
 
+/**
+ * Persist auto-assigned ports into tunnel metadata (same shape as mobile):
+ * `{ tunneldashPort: { "hostname": port, ... } }`.
+ * Requires Cloudflare Tunnel:Edit. 403 is non-fatal (ports still work in-session).
+ */
+export async function updateTunnelMetadata(
+  token: string,
+  accountId: string,
+  tunnelId: string,
+  metadata: Record<string, unknown>
+): Promise<void> {
+  if (DEMO_MODE) return;
+  await invoke("cf_update_tunnel_metadata", { token, accountId, tunnelId, metadata });
+}
+
 export async function fetchCloudflaredVersion(): Promise<string> {
   if (DEMO_MODE) return demoDelay("cloudflared version 2026.8.2");
   return invoke<string>("cloudflared_version");
@@ -129,27 +145,93 @@ export async function stopTunnel(hostname: string) {
   return invoke("stop_tunnel", { hostname });
 }
 
+export async function getTunnelCommand(
+  hostname: string,
+  localPort: number,
+  protocol?: string
+): Promise<TunnelCommandDetails> {
+  if (DEMO_MODE) {
+    const sub = (protocol || "tcp").toLowerCase();
+    return {
+      hostname,
+      local_port: localPort,
+      protocol: sub,
+      binary: "/usr/local/bin/cloudflared",
+      command: `/usr/local/bin/cloudflared access ${sub} --hostname ${hostname} --url localhost:${localPort}`,
+      args: ["access", sub, "--hostname", hostname, "--url", `localhost:${localPort}`],
+      running: false,
+      log_path: `~/.tunneldash/logs/cloudflared-${hostname}.log`,
+    };
+  }
+  return invoke<TunnelCommandDetails>("get_tunnel_command", { hostname, localPort, protocol });
+}
+
+export async function getTunnelLogs(hostname: string, limit?: number): Promise<string[]> {
+  if (DEMO_MODE) {
+    return [
+      `[demo] 2026-09-19T19:00:00Z INF Starting tunnel ${hostname}`,
+      `[demo] 2026-09-19T19:00:01Z INF Proxying to Cloudflare edge`,
+      `[demo] 2026-09-19T19:00:02Z INF Ready for connections`,
+    ];
+  }
+  return invoke<string[]>("get_tunnel_logs", { hostname, limit });
+}
+
+export async function launchRdp(host: string, port: number): Promise<void> {
+  if (DEMO_MODE) return;
+  return invoke("launch_rdp", { host, port });
+}
+
+export async function launchSmb(host: string, port: number): Promise<void> {
+  if (DEMO_MODE) return;
+  return invoke("launch_smb", { host, port });
+}
+
 export type SshCredentialInfo = {
   username?: string | null;
   hasPassword: boolean;
+  hasKey: boolean;
+  authType?: string | null;
+  keyPath?: string | null;
 };
 
-export type SshOpenRequest = {
+export type SshConfigStatus = {
+  configPath: string;
+  fileExists: boolean;
+  managedHosts: string[];
+  cloudflaredCommand: string;
+};
+
+export type SshHostConfig = {
   host: string;
-  port: number;
+  alias?: string;
+  hostname?: string;
   username?: string;
-  password?: string;
-  useSaved: boolean;
+  keyPath?: string;
 };
 
-export async function sshSaveCredential(host: string, username: string, password: string) {
+export type SshCredentialInput = {
+  host: string;
+  username: string;
+  password?: string;
+  keyPath?: string;
+  keyPassphrase?: string;
+};
+
+export async function sshSaveCredential(input: SshCredentialInput) {
   if (DEMO_MODE) return;
-  return invoke("ssh_save_credential", { host, username, password });
+  return invoke("ssh_save_credential", {
+    host: input.host,
+    username: input.username,
+    password: input.password ?? null,
+    keyPath: input.keyPath ?? null,
+    keyPassphrase: input.keyPassphrase ?? null,
+  });
 }
 
 export async function sshGetCredential(host: string): Promise<SshCredentialInfo> {
   if (DEMO_MODE)
-    return demoDelay({ username: "demo", hasPassword: true });
+    return demoDelay({ username: "demo", hasPassword: true, hasKey: false, authType: "password" });
   return invoke<SshCredentialInfo>("ssh_get_credential", { host });
 }
 
@@ -158,39 +240,125 @@ export async function sshDeleteCredential(host: string) {
   return invoke("ssh_delete_credential", { host });
 }
 
-export async function sshOpen(request: SshOpenRequest): Promise<string> {
-  if (DEMO_MODE) return demoDelay("ssh -p 50000 demo@localhost");
-  return invoke<string>("ssh_open", { request });
-}
-
-export type SshSessionConfig = {
+export type SshCredentialSummary = {
   host: string;
-  port: number;
-  username?: string;
-  password?: string;
-  useSaved: boolean;
-  cols?: number;
-  rows?: number;
+  username?: string | null;
+  hasPassword: boolean;
+  hasKey: boolean;
 };
 
-export async function sshConnect(config: SshSessionConfig): Promise<number> {
-  if (DEMO_MODE) return demoDelay(1);
-  return invoke<number>("ssh_connect", { config });
+export async function sshListCredentials(candidateHosts: string[]): Promise<SshCredentialSummary[]> {
+  if (DEMO_MODE)
+    return demoDelay([
+      { host: "legacy-jumpbox.corp.example.com", username: "ops", hasPassword: false, hasKey: true },
+    ]);
+  return invoke<SshCredentialSummary[]>("ssh_list_credentials", { hosts: candidateHosts });
 }
 
-export async function sshWrite(id: number, data: string) {
-  if (DEMO_MODE) return;
-  return invoke("ssh_write", { id, data });
+// ─── Credential sync (encrypted vault inside tunnel metadata) ────────────────
+
+export type SyncMode = "token" | "passphrase";
+
+export type SshFullCredential = {
+  host: string;
+  username: string;
+  password?: string | null;
+  keyPath?: string | null;
+  keyPassphrase?: string | null;
+};
+
+export type SyncVault = {
+  v: number;
+  mode: SyncMode;
+  kdf: { alg: string; salt: string; iter: number };
+  creds: Record<string, string>;
+};
+
+/** Full local secrets (macOS enumerates every entry; elsewhere pass known hosts). */
+export async function sshExportLocal(candidateHosts: string[]): Promise<SshFullCredential[]> {
+  if (DEMO_MODE) return demoDelay([]);
+  return invoke<SshFullCredential[]>("ssh_export_local", { hosts: candidateHosts });
 }
 
-export async function sshResize(id: number, cols: number, rows: number) {
-  if (DEMO_MODE) return;
-  return invoke("ssh_resize", { id, cols, rows });
+export async function sshSyncBuildVault(
+  mode: SyncMode,
+  secret: string,
+  salt: string | null,
+  creds: SshFullCredential[]
+): Promise<SyncVault> {
+  if (DEMO_MODE)
+    return demoDelay({
+      v: 1,
+      mode,
+      kdf: { alg: "pbkdf2-sha256", salt: "ZGVtb3NhbHQ=", iter: 600000 },
+      creds: Object.fromEntries(creds.map((c) => [c.host.toLowerCase(), "ZGVtb2Jsb2I="])),
+    });
+  return invoke<SyncVault>("ssh_sync_build_vault", { mode, secret, salt, creds });
 }
 
-export async function sshClose(id: number) {
+export async function sshSyncOpenVault(
+  mode: SyncMode,
+  secret: string,
+  vault: SyncVault
+): Promise<SshFullCredential[]> {
+  if (DEMO_MODE) return demoDelay([]);
+  return invoke<SshFullCredential[]>("ssh_sync_open_vault", { mode, secret, vault });
+}
+
+export async function sshGetConfigStatus(): Promise<SshConfigStatus> {
+  if (DEMO_MODE)
+    return demoDelay({
+      configPath: "~/.ssh/config",
+      fileExists: true,
+      managedHosts: ["prod-db.corp.example.com"],
+      cloudflaredCommand: "cloudflared",
+    });
+  return invoke<SshConfigStatus>("ssh_get_config_status");
+}
+
+export async function sshSyncConfig(hosts: SshHostConfig[]): Promise<SshConfigStatus> {
+  if (DEMO_MODE)
+    return demoDelay({
+      configPath: "~/.ssh/config",
+      fileExists: true,
+      managedHosts: hosts.map((h) => h.hostname || h.host),
+      cloudflaredCommand: "cloudflared",
+    });
+  return invoke<SshConfigStatus>("ssh_sync_config", { hosts });
+}
+
+export async function sshRemoveFromConfig(hosts: string[]): Promise<SshConfigStatus> {
+  if (DEMO_MODE)
+    return demoDelay({
+      configPath: "~/.ssh/config",
+      fileExists: true,
+      managedHosts: [],
+      cloudflaredCommand: "cloudflared",
+    });
+  return invoke<SshConfigStatus>("ssh_remove_from_config", { hosts });
+}
+
+export async function sshPreviewConfig(hosts: SshHostConfig[]): Promise<string> {
+  if (DEMO_MODE)
+    return demoDelay("# TunnelDash SSH preview\nHost example.com\n  ProxyCommand cloudflared access ssh --hostname %h");
+  return invoke<string>("ssh_preview_config", { hosts });
+}
+
+export async function launchTerminal(command: string): Promise<void> {
   if (DEMO_MODE) return;
-  return invoke("ssh_close", { id });
+  return invoke("launch_terminal", { command });
+}
+
+export async function openUrl(url: string): Promise<void> {
+  if (DEMO_MODE) {
+    window.open(url, "_blank");
+    return;
+  }
+  try {
+    await invoke("open_url", { url });
+  } catch {
+    window.open(url, "_blank");
+  }
 }
 
 function formatError(data: CloudflareList<unknown>): string {

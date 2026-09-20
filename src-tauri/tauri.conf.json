@@ -1,7 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "TunnelDash",
-  "version": "0.2.0",
+  "mainBinaryName": "tunneldash",
+  "version": "0.4.0",
   "identifier": "be.maurodruwel.tunneldash",
   "build": {
     "beforeDevCommand": "pnpm dev",

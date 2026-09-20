@@ -93,6 +93,24 @@ pub async fn cf_tunnel_config(
         })
 }
 
+/// Persist auto-assigned local ports into tunnel metadata (same shape as mobile):
+/// `metadata.tunneldashPort = { "hostname": port, ... }`.
+/// Requires Cloudflare Tunnel:Edit. Callers treat 403 as non-fatal.
+#[tauri::command]
+pub async fn cf_update_tunnel_metadata(
+    token: String,
+    account_id: String,
+    tunnel_id: String,
+    metadata: serde_json::Value,
+) -> Result<CloudflareResponse<Tunnel>, String> {
+    let url = format!(
+        "https://api.cloudflare.com/client/v4/accounts/{}/cfd_tunnel/{}",
+        account_id, tunnel_id
+    );
+    let body = serde_json::json!({ "metadata": metadata });
+    http_patch(&url, &token, &body).await
+}
+
 pub async fn http_get<T: DeserializeOwned + Serialize>(
     url: &str,
     token: &str,
@@ -116,6 +134,34 @@ pub async fn http_get<T: DeserializeOwned + Serialize>(
     }
 
     Ok(body)
+}
+
+pub async fn http_patch<T: DeserializeOwned + Serialize, B: Serialize>(
+    url: &str,
+    token: &str,
+    body: &B,
+) -> Result<T, String> {
+    let resp = HTTP
+        .patch(url)
+        .bearer_auth(token)
+        .json(body)
+        .send()
+        .await
+        .map_err(|e| format!("Cloudflare request failed: {e}"))?;
+
+    let status = resp.status();
+    let parsed = resp
+        .json::<T>()
+        .await
+        .map_err(|e| format!("Cloudflare response parse failed: {e}"))?;
+
+    if !status.is_success() {
+        let err_msg = extract_error(&parsed)
+            .unwrap_or_else(|| format!("Cloudflare request failed (HTTP {})", status.as_u16()));
+        return Err(err_msg);
+    }
+
+    Ok(parsed)
 }
 
 pub fn extract_error<T: Serialize>(body: &T) -> Option<String> {

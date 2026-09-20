@@ -1,0 +1,453 @@
+/* ─── SSH Sessions Screen ────────────────────────────────────────────────── */
+.cf-ssh-row {
+  display: grid;
+  grid-template-columns: minmax(180px, 1.8fr) 95px minmax(140px, 1.2fr) 180px;
+  gap: 12px;
+  padding: 12px 16px;
+  align-items: center;
+  transition: background-color 0.12s ease;
+}
+
+.cf-ssh-row:hover {
+  background-color: var(--kumo-tint);
+}
+
+.cf-ssh-row.editing {
+  background-color: var(--kumo-base);
+}
+
+/* Auth state badge */
+.cf-ssh-auth {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.cf-ssh-auth span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cf-ssh-auth.ok {
+  background-color: var(--cf-green-9);
+  color: var(--cf-green-5);
+}
+
+.cf-ssh-auth.warn {
+  background-color: var(--cf-red-9);
+  color: var(--cf-red-5);
+}
+
+/* "proxy active" hint next to the local binding */
+.cf-ssh-proxy-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 8px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--cf-green-5);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+/* Saved Credentials card rows */
+.cf-cred-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--kumo-line);
+}
+
+.cf-cred-row:last-child {
+  border-bottom: none;
+}
+
+.cf-cred-row:hover {
+  background-color: var(--kumo-tint);
+}
+
+.btn-cf-danger.small.confirming {
+  background-color: var(--cf-red-5);
+  color: #ffffff;
+}
+
+/* Credential editor panel below a session row */
+.cf-ssh-editor {
+  margin: 0 16px 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--kumo-line);
+  border-radius: 6px;
+  background-color: var(--kumo-canvas);
+}
+
+.cf-ssh-editor-header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.cf-ssh-editor-title {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--kumo-default);
+}
+
+.cf-ssh-editor-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+  gap: 12px 16px;
+}
+
+.cf-ssh-editor-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+/* Password / SSH Key segmented toggle */
+.cf-segmented {
+  display: inline-flex;
+  border: 1px solid var(--kumo-line-strong);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.cf-segmented button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: none;
+  background: transparent;
+  color: var(--kumo-subtle);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.cf-segmented button + button {
+  border-left: 1px solid var(--kumo-line-strong);
+}
+
+.cf-segmented button:hover:not(.active) {
+  background-color: var(--kumo-tint);
+  color: var(--kumo-default);
+}
+
+.cf-segmented button.active {
+  background-color: var(--kumo-base);
+  color: var(--kumo-default);
+  font-weight: 600;
+}
+
+@media (max-width: 720px) {
+  .cf-ssh-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .cf-ssh-editor-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ─── Modal & SSH Dialogs ─────────────────────────────────────────────────── */
+.cf-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  padding: 16px;
+}
+
+.cf-modal-card {
+  background-color: var(--kumo-canvas);
+  border: 1px solid var(--kumo-line-strong);
+  border-radius: 8px;
+  width: 100%;
+  max-width: 540px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  animation: cf-modal-pop 0.15s ease-out;
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes cf-modal-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.cf-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--kumo-line);
+  background-color: var(--kumo-base);
+}
+
+.cf-modal-icon-wrap {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background-color: var(--kumo-recessed);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--cf-orange-6);
+  flex-shrink: 0;
+}
+
+.cf-modal-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--kumo-default);
+  margin: 0;
+}
+
+.cf-modal-subtitle {
+  font-size: 12px;
+  color: var(--kumo-subtle);
+  margin-top: 2px;
+}
+
+.cf-modal-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--kumo-subtle);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.12s ease;
+}
+
+.cf-modal-close-btn:hover {
+  background-color: var(--kumo-tint);
+  color: var(--kumo-default);
+}
+
+.cf-modal-body {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.cf-cmd-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cf-cmd-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cf-cmd-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--kumo-subtle);
+}
+
+.cf-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 7px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.cf-status-pill.healthy {
+  background-color: var(--cf-green-9);
+  color: var(--cf-green-5);
+}
+
+.cf-status-pill.healthy .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--cf-green-5);
+}
+
+.cf-cmd-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: var(--kumo-recessed);
+  border: 1px solid var(--kumo-line);
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+
+.cf-cmd-prompt {
+  color: var(--cf-orange-6);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  user-select: none;
+}
+
+.cf-cmd-text {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--kumo-default);
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.cf-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.cf-copy-btn.copied {
+  color: var(--cf-green-5);
+  border-color: var(--cf-green-5);
+}
+
+.cf-config-status-card {
+  border: 1px solid var(--kumo-line);
+  border-radius: 6px;
+  padding: 12px 14px;
+  background-color: var(--kumo-base);
+}
+
+.cf-config-status-ok {
+  display: flex;
+  flex-direction: column;
+}
+
+.cf-config-status-pending {
+  display: flex;
+  flex-direction: column;
+}
+
+.cf-cmd-box-compact {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--kumo-canvas);
+  border: 1px solid var(--kumo-line);
+  border-radius: 4px;
+  padding: 6px 10px;
+}
+
+.cf-cmd-text-compact {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--kumo-default);
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.cf-auth-info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background-color: var(--kumo-recessed);
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.cf-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  border-top: 1px solid var(--kumo-line);
+  background-color: var(--kumo-base);
+}
+
+/* ─── Code Preview Modal ─────────────────────────────────────────────────── */
+.cf-code-preview-wrap {
+  border: 1px solid var(--kumo-line);
+  border-radius: 6px;
+  overflow: hidden;
+  background-color: var(--kumo-base);
+}
+
+.cf-code-preview-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--kumo-line);
+  background-color: var(--kumo-recessed);
+}
+
+.cf-code-preview-content {
+  margin: 0;
+  padding: 14px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--kumo-default);
+  overflow-x: auto;
+  white-space: pre;
+  max-height: 360px;
+}
+
+/* ─── Top Config Overview Banner ─────────────────────────────────────────── */
+.cf-ssh-config-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background-color: var(--kumo-base);
+  border: 1px solid var(--kumo-line);
+  border-radius: 6px;
+  margin-bottom: 16px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.cf-ssh-config-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+

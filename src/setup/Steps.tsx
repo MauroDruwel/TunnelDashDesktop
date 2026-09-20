@@ -30,7 +30,7 @@ export function WelcomeStep({ onNext }: { onNext: () => void }) {
       >
         <div>• Real-time tunnel status & edge datacenter monitoring</div>
         <div>• Local port binding & proxying to edge ingress routes</div>
-        <div>• Integrated web SSH terminal with credential storage</div>
+        <div>• Native SSH config sync (~/.ssh/config) with credential storage</div>
       </div>
 
       <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 6 }}>

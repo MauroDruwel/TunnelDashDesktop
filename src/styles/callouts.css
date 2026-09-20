@@ -1,0 +1,48 @@
+/* ─── Callouts ───────────────────────────────────────────────────────────── */
+.cf-callout {
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--kumo-line);
+  background-color: var(--kumo-canvas);
+  width: 100%;
+}
+
+.cf-callout.error {
+  border-color: var(--cf-red-5);
+  background-color: var(--cf-red-9);
+  color: var(--cf-red-5);
+}
+
+.cf-callout.ok {
+  border-color: var(--cf-green-5);
+  background-color: var(--cf-green-9);
+  color: var(--cf-green-5);
+}
+
+/* ─── Update banner ──────────────────────────────────────────────────────── */
+.cf-update-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  margin-bottom: 14px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--cf-blue-5);
+  background-color: var(--cf-blue-9);
+  color: var(--cf-blue-5);
+  font-size: 13px;
+}
+
+.cf-update-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+

@@ -1,0 +1,83 @@
+/* Ingress Sub-Table */
+.cf-subtable-container {
+  background-color: var(--kumo-base);
+  border-top: 1px solid var(--kumo-line);
+  padding: 12px 16px 16px 36px;
+}
+
+.cf-subtable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  background-color: var(--kumo-canvas);
+  border: 1px solid var(--kumo-line);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.cf-subtable th {
+  background-color: var(--kumo-recessed);
+  color: var(--kumo-subtle);
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--kumo-line);
+}
+
+.cf-subtable td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--kumo-line);
+  color: var(--kumo-default);
+}
+
+.cf-subtable tr:last-child td {
+  border-bottom: none;
+}
+
+/* SSH Panel */
+.cf-ssh-panel {
+  background-color: var(--kumo-canvas);
+  border: 1px solid var(--kumo-line-strong);
+  border-radius: 6px;
+  padding: 12px 14px;
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cf-ssh-fields {
+  display: flex;
+  gap: 10px;
+}
+
+.cf-ssh-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+}
+
+.cf-ssh-field label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--kumo-subtle);
+}
+
+.cf-ssh-input {
+  padding: 5px 8px;
+  border: 1px solid var(--kumo-line-strong);
+  border-radius: 4px;
+  font-size: 12.5px;
+  background-color: var(--kumo-canvas);
+  color: var(--kumo-default);
+  outline: none;
+}
+
+.cf-ssh-input:focus {
+  border-color: var(--kumo-interactive);
+  box-shadow: 0 0 0 2px var(--kumo-focus);
+}
+
