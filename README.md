@@ -16,6 +16,7 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/MauroDruwel/quality-gate"><img alt="Mauro Quality Gate" src="https://img.shields.io/badge/Mauro%20Quality%20Gate-Passed-2ea44f?style=flat&logo=github"/></a>
   <img alt="Release" src="https://img.shields.io/github/v/release/MauroDruwel/TunnelDashDesktop"/>
   <img alt="License" src="https://img.shields.io/github/license/MauroDruwel/TunnelDashDesktop"/>
   <img alt="Platforms" src="https://img.shields.io/badge/platforms-macOS%20%7C%20Windows%20%7C%20Linux-blue"/>
