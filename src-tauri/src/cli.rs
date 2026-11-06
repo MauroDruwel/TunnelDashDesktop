@@ -107,7 +107,7 @@ fn state_file() -> PathBuf {
     shared_cache_dir(None).join("proxies.json")
 }
 
-/// tauri-plugin-store saves settings at `<appConfigDir>/settings.json`.
+/// tauri-plugin-store saves settings at `<appDataDir>/settings.json`.
 fn settings_store_path() -> Option<PathBuf> {
     #[cfg(target_os = "macos")]
     {
@@ -120,9 +120,9 @@ fn settings_store_path() -> Option<PathBuf> {
     }
     #[cfg(target_os = "linux")]
     {
-        let base = std::env::var_os("XDG_CONFIG_HOME")
+        let base = std::env::var_os("XDG_DATA_HOME")
             .map(PathBuf::from)
-            .or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".config")))?;
+            .or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".local/share")))?;
         Some(base.join(IDENTIFIER).join("settings.json"))
     }
     #[cfg(target_os = "windows")]
@@ -133,8 +133,6 @@ fn settings_store_path() -> Option<PathBuf> {
 
 #[derive(Debug, Deserialize)]
 struct StoredSettings {
-    #[serde(default, rename = "apiKey")]
-    api_key: String,
     #[serde(default, rename = "accountId")]
     account_id: Option<String>,
     #[serde(default, rename = "portStart")]
@@ -160,15 +158,15 @@ fn load_settings() -> Result<StoredSettings, String> {
 
 async fn list() -> Result<(), String> {
     let settings = load_settings()?;
-    if settings.api_key.is_empty() {
-        return Err("no API token stored — verify a token in the desktop app first".into());
-    }
+    let token = crate::api_token::read_api_token()?.ok_or(
+        "no API token in the credential store — open the desktop app to migrate or verify your token",
+    )?;
     let account_id = settings
         .account_id
         .clone()
         .ok_or("no verified account stored — verify a token in the desktop app first")?;
 
-    let response = cf_tunnels(settings.api_key.clone(), account_id.clone())
+    let response = cf_tunnels(token.clone(), account_id.clone())
         .await
         .map_err(|e| format!("could not fetch tunnels: {e}"))?;
     let tunnels_list = response.result.unwrap_or_default();
@@ -195,12 +193,8 @@ async fn list() -> Result<(), String> {
             }
         }
 
-        let Ok(config) = cf_tunnel_config(
-            settings.api_key.clone(),
-            account_id.clone(),
-            tunnel.id.clone(),
-        )
-        .await
+        let Ok(config) =
+            cf_tunnel_config(token.clone(), account_id.clone(), tunnel.id.clone()).await
         else {
             println!("    (config unavailable)");
             continue;

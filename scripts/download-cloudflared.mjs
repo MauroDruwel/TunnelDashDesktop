@@ -9,14 +9,14 @@
  */
 
 import { execFileSync } from "node:child_process";
-import { createWriteStream, existsSync, mkdirSync, chmodSync } from "node:fs";
+import { createWriteStream, existsSync, mkdirSync } from "node:fs";
+import { chmod, mkdtemp, rename, rm } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { pipeline } from "node:stream/promises";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const binariesDir = join(root, "src-tauri", "binaries");
-const extension = process.platform === "win32" ? ".exe" : "";
 
 const ASSETS = {
   "x86_64-unknown-linux-gnu": { file: "cloudflared-linux-amd64" },
@@ -49,6 +49,7 @@ async function main() {
     process.exit(1);
   }
 
+  const extension = triple.includes("-windows-") ? ".exe" : "";
   const destination = join(binariesDir, `cloudflared-${triple}${extension}`);
   if (existsSync(destination) && process.env.CLOUDFLARED_FORCE !== "1") {
     console.log(`cloudflared sidecar already present: ${destination}`);
@@ -56,32 +57,28 @@ async function main() {
   }
 
   const version = process.env.CLOUDFLARED_VERSION || "latest";
-  const url = `https://github.com/cloudflare/cloudflared/releases/${version}/download/${asset.file}`;
+  const releasePath = version === "latest" ? "latest/download" : `download/${encodeURIComponent(version)}`;
+  const url = `https://github.com/cloudflare/cloudflared/releases/${releasePath}/${asset.file}`;
 
   mkdirSync(binariesDir, { recursive: true });
 
   console.log(`Downloading cloudflared (${triple}) from ${url}`);
 
-  const temp = join(binariesDir, `.cloudflared-${triple}-${Date.now()}${asset.archive ? ".tgz" : extension}`);
-  const response = await fetch(url);
-  if (!response.ok) {
-    console.error(`Download failed: HTTP ${response.status} for ${url}`);
-    process.exit(1);
-  }
-
-  await pipeline(response.body, createWriteStream(temp));
-
-  if (asset.archive) {
-    execFileSync("tar", ["-xzf", temp, "-C", binariesDir]);
-    const extracted = join(binariesDir, "cloudflared");
-    const staged = join(binariesDir, `cloudflared-${triple}${extension}`);
-    if (existsSync(extracted)) {
-      await import("node:fs/promises").then((fs) => fs.rename(extracted, staged));
+  const staging = await mkdtemp(join(binariesDir, ".cloudflared-"));
+  try {
+    const temp = join(staging, asset.file);
+    const response = await fetch(url, { signal: AbortSignal.timeout(120_000) });
+    if (!response.ok) throw new Error(`Download failed: HTTP ${response.status} for ${url}`);
+    await pipeline(response.body, createWriteStream(temp));
+    let binary = temp;
+    if (asset.archive) {
+      execFileSync("tar", ["-xzf", temp, "-C", staging, "cloudflared"]);
+      binary = join(staging, "cloudflared");
     }
-  } else {
-    const fs = await import("node:fs/promises");
-    await fs.rename(temp, destination);
-    if (extension === "") chmodSync(destination, 0o755);
+    if (!extension) await chmod(binary, 0o755);
+    await rename(binary, destination);
+  } finally {
+    await rm(staging, { recursive: true, force: true });
   }
 
   console.log(`Saved cloudflared sidecar: ${destination}`);

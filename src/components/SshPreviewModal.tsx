@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Modal } from "./Modal";
 import { CloseIcon, CopyIcon, CheckIcon, CloudIcon } from "./icons";
 
 export type SshPreviewModalProps = {
@@ -25,8 +26,7 @@ export function SshPreviewModal({
   };
 
   return (
-    <div className="cf-modal-backdrop" onClick={onClose}>
-      <div className="cf-modal-card" style={{ maxWidth: 640 }} onClick={(e) => e.stopPropagation()}>
+    <Modal titleId="ssh-preview-title" onClose={onClose} wide>
         {/* Header */}
         <div className="cf-modal-header">
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -34,7 +34,7 @@ export function SshPreviewModal({
               <CloudIcon size={18} />
             </div>
             <div>
-              <h2 className="cf-modal-title">SSH Config Preview</h2>
+              <h2 id="ssh-preview-title" className="cf-modal-title">SSH Config Preview</h2>
               <div className="cf-modal-subtitle" style={{ fontFamily: "var(--font-mono)" }}>
                 {configPath}
               </div>
@@ -92,7 +92,6 @@ export function SshPreviewModal({
             Close
           </button>
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 }

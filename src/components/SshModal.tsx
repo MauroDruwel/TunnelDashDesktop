@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { Modal } from "./Modal";
 import {
   CloseIcon,
   TerminalIcon,
@@ -70,8 +71,7 @@ export function SshModal({
     alias?.toLowerCase() === cleanTunnelName.toLowerCase().replace(/[^a-z0-9]/g, "");
 
   return (
-    <div className="cf-modal-backdrop" onClick={onClose}>
-      <div className="cf-modal-card" onClick={(e) => e.stopPropagation()}>
+    <Modal titleId="ssh-connect-title" onClose={onClose}>
         {/* Header */}
         <div className="cf-modal-header">
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -79,7 +79,7 @@ export function SshModal({
               <TerminalIcon size={18} />
             </div>
             <div>
-              <h2 className="cf-modal-title">Connect via SSH</h2>
+              <h2 id="ssh-connect-title" className="cf-modal-title">Connect via SSH</h2>
               <div className="cf-modal-subtitle">
                 {alias ? (
                   <>
@@ -207,7 +207,6 @@ export function SshModal({
             Done
           </button>
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 }

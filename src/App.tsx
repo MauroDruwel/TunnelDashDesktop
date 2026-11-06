@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState, useEffect } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { useTunnelState } from "./useTunnelState";
+import { useQuickSearch } from "./useQuickSearch";
 import { useTheme } from "./theme";
 import { SetupScreen } from "./Setup";
 import { TunnelsScreen } from "./screens/TunnelsScreen";
@@ -15,30 +16,9 @@ import {
 } from "./api";
 import { collectSshServers, deriveHostAlias } from "./utils/tunnelTransforms";
 import { SshModal } from "./components/SshModal";
-import {
-  CloudflareLogo,
-  CaretUpDownIcon,
-  SearchIcon,
-  CloudIcon,
-  TerminalIcon,
-  GearIcon,
-  SunIcon,
-  MoonIcon,
-  ZapIcon,
-  PanelLeftIcon,
-  CloseIcon,
-} from "./components/icons";
-import appIcon from "./assets/icon.png";
+import { CloseIcon, SunIcon, MoonIcon } from "./components/icons";
+import { DashboardSidebar } from "./components/DashboardSidebar";
 import "./App.css";
-
-function formatDaemonVersion(raw: string | null): string {
-  if (!raw) return "cloudflared ready";
-  let cleaned = raw.trim();
-  if (cleaned.startsWith("cloudflared ")) {
-    cleaned = cleaned.slice("cloudflared ".length).trim();
-  }
-  return `cloudflared ${cleaned}`;
-}
 
 export function App() {
   const {
@@ -79,13 +59,20 @@ export function App() {
   // Tray menu: focus the tunnels list when a proxying tunnel is clicked.
   useEffect(() => {
     if (typeof (window as { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__ === "undefined") return;
+    let disposed = false;
     let unsub: (() => void) | null = null;
     void listen<string>("tray-navigate", () => {
-      setActiveTab("tunnels");
+      if (!disposed) setActiveTab("tunnels");
     }).then((fn) => {
-      unsub = fn;
+      if (disposed) fn();
+      else unsub = fn;
+    }).catch((err) => {
+      console.warn("Could not register tray navigation listener", err);
     });
-    return () => unsub?.();
+    return () => {
+      disposed = true;
+      unsub?.();
+    };
   }, []);
 
   const { theme, toggle: toggleTheme } = useTheme();
@@ -100,15 +87,16 @@ export function App() {
     localStorage.setItem("cf-sidebar-collapsed", String(sidebarCollapsed));
   }, [sidebarCollapsed]);
 
-  // Handle Cmd+K for quick search and Cmd+B or '[' to toggle sidebar
+  const openTunnels = useCallback(() => setActiveTab("tunnels"), []);
+  const quickSearch = useQuickSearch(openTunnels, activeTab, Boolean(settings.accountId));
+
+  // Handle Cmd/Ctrl+K for search and Cmd/Ctrl+B to toggle the sidebar.
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k" && settings.accountId) {
+        if (document.querySelector("dialog[open]")) return;
         e.preventDefault();
-        const searchInput = document.querySelector(".cf-search-input") as HTMLInputElement;
-        if (searchInput) {
-          searchInput.focus();
-        }
+        quickSearch();
       }
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "b") {
         e.preventDefault();
@@ -117,7 +105,7 @@ export function App() {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [quickSearch, settings.accountId]);
 
   const accountDisplay =
     settings.accountName ||
@@ -218,169 +206,22 @@ export function App() {
 
   return (
     <div className="cf-kumo-app">
-      {/* ─── Cloudflare Kumo Sidebar (Collapsible) ─── */}
-      <aside className={`cf-kumo-sidebar ${sidebarCollapsed ? "collapsed" : ""}`}>
-        {/* macOS: draggable strip under the traffic lights / overlay title bar */}
-        <div className="cf-kumo-sidebar-drag" data-tauri-drag-region />
-
-        {/* Header: Flame Logo + Account Switcher + Toggle */}
-        <div className="cf-kumo-sidebar-header" data-tauri-drag-region>
-          <a
-            href="/"
-            className="cf-logo-link"
-            title="Cloudflare Dashboard"
-            onClick={(e) => {
-              e.preventDefault();
-              setActiveTab("tunnels");
-            }}
-          >
-            {sidebarCollapsed ? (
-              <img src={appIcon} alt="TunnelDash" className="cf-collapsed-logo" draggable={false} />
-            ) : (
-              <CloudflareLogo size={34} />
-            )}
-          </a>
-
-          {!sidebarCollapsed && (
-            <button
-              type="button"
-              className="cf-account-switcher-btn"
-              title={accountDisplay}
-              onClick={() => setActiveTab("settings")}
-            >
-              <span className="cf-account-title">{accountDisplay}</span>
-              <CaretUpDownIcon size={14} className="cf-account-caret" />
-            </button>
-          )}
-
-          <button
-            type="button"
-            className="cf-sidebar-toggle-btn"
-            title={sidebarCollapsed ? "Expand sidebar (⌘B)" : "Collapse sidebar (⌘B)"}
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          >
-            <PanelLeftIcon size={16} />
-          </button>
-        </div>
-
-        {/* Sidebar Body */}
-        <div className="cf-kumo-sidebar-body">
-          {/* Quick Search trigger button */}
-          <button
-            type="button"
-            className="cf-quick-search-btn"
-            title="Quick search (⌘K)"
-            onClick={() => {
-              if (sidebarCollapsed) {
-                setSidebarCollapsed(false);
-              }
-              setTimeout(() => {
-                const searchInput = document.querySelector(".cf-search-input") as HTMLInputElement;
-                if (searchInput) searchInput.focus();
-              }, 100);
-            }}
-          >
-            <SearchIcon size={14} />
-            <span>Quick search...</span>
-            <kbd className="cf-quick-search-kbd">⌘K</kbd>
-          </button>
-
-          {/* Navigation Items */}
-          <ul className="cf-kumo-menu">
-            <li>
-              <button
-                type="button"
-                className={`cf-kumo-menu-link ${activeTab === "tunnels" ? "active" : ""}`}
-                onClick={() => setActiveTab("tunnels")}
-                disabled={!verified}
-                title="Tunnels"
-              >
-                <span className="cf-kumo-menu-link-inner">
-                  <span className="cf-kumo-menu-icon">
-                    <CloudIcon size={16} />
-                  </span>
-                  <span>Tunnels</span>
-                </span>
-                {tunnels.length > 0 && (
-                  <span className="cf-kumo-badge">{tunnels.length}</span>
-                )}
-              </button>
-            </li>
-
-            <li>
-              <button
-                type="button"
-                className={`cf-kumo-menu-link ${activeTab === "ssh" ? "active" : ""}`}
-                onClick={() => setActiveTab("ssh")}
-                disabled={!verified}
-                title="SSH Sessions"
-              >
-                <span className="cf-kumo-menu-link-inner">
-                  <span className="cf-kumo-menu-icon">
-                    <TerminalIcon size={16} />
-                  </span>
-                  <span>SSH Sessions</span>
-                </span>
-                {sshServers.length > 0 && (
-                  <span className="cf-kumo-badge">{sshServers.length}</span>
-                )}
-              </button>
-            </li>
-
-            <li>
-              <button
-                type="button"
-                className={`cf-kumo-menu-link ${activeTab === "settings" ? "active" : ""}`}
-                onClick={() => setActiveTab("settings")}
-                title="Settings & Access"
-              >
-                <span className="cf-kumo-menu-link-inner">
-                  <span className="cf-kumo-menu-icon">
-                    <GearIcon size={16} />
-                  </span>
-                  <span>Settings & Access</span>
-                </span>
-              </button>
-            </li>
-          </ul>
-        </div>
-
-        {/* Sidebar Footer */}
-        <div className="cf-kumo-sidebar-footer">
-          <div
-            style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0, overflow: "hidden" }}
-            title={formatDaemonVersion(cloudflaredVersion)}
-          >
-            <ZapIcon
-              size={13}
-              style={{
-                flexShrink: 0,
-                color: activeHosts.size > 0 ? "var(--cf-green-5)" : "var(--kumo-subtle)",
-              }}
-            />
-            <span
-              className="cf-daemon-text"
-              style={{
-                fontSize: 11.5,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {formatDaemonVersion(cloudflaredVersion)}
-            </span>
-          </div>
-
-          <button
-            type="button"
-            className="cf-theme-toggle-btn"
-            onClick={toggleTheme}
-            title={theme === "light" ? "Switch to Dark Mode" : "Switch to Light Mode"}
-          >
-            {theme === "light" ? <MoonIcon size={14} /> : <SunIcon size={14} />}
-          </button>
-        </div>
-      </aside>
+      <DashboardSidebar
+        sidebarCollapsed={sidebarCollapsed}
+        setSidebarCollapsed={setSidebarCollapsed}
+        accountDisplay={accountDisplay}
+        hasAccount={Boolean(settings.accountId)}
+        quickSearch={quickSearch}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        verified={verified}
+        tunnelCount={tunnels.length}
+        sshCount={sshServers.length}
+        proxyCount={activeHosts.size}
+        cloudflaredVersion={cloudflaredVersion}
+        theme={theme}
+        toggleTheme={toggleTheme}
+      />
 
       {/* ─── Main Content Area (Full Resolution) ─── */}
       <main className="cf-kumo-main">

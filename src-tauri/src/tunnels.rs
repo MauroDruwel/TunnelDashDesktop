@@ -38,6 +38,12 @@ pub(crate) fn active_proxies() -> Vec<(String, u16)> {
     list
 }
 
+/// List currently running proxies for the dashboard.
+#[tauri::command]
+pub fn list_active_proxy_hosts() -> Vec<String> {
+    active_proxies().into_iter().map(|(host, _)| host).collect()
+}
+
 /// Cache dir shared by the GUI and the CLI (matches Tauri's app_cache_dir).
 pub(crate) fn shared_cache_dir(app: Option<&AppHandle>) -> PathBuf {
     if let Some(app) = app {

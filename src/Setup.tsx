@@ -15,7 +15,7 @@ export function SetupScreen({
 }: {
   settings: Settings;
   save: (data: Partial<Settings & { verified?: boolean }>) => void;
-  verify: () => Promise<void>;
+  verify: (candidate?: string) => Promise<void>;
   verifying: boolean;
   verified: boolean;
   error: string | null;
@@ -26,6 +26,7 @@ export function SetupScreen({
     const step = new URLSearchParams(window.location.search).get("step");
     return step === "port" || step === "api" ? step : "welcome";
   });
+  const [tokenDraft, setTokenDraft] = useState("");
 
   const stepOrder: SetupStep[] = ["welcome", "port", "api"];
   const currentStepIndex = stepOrder.indexOf(setupStep);
@@ -81,13 +82,13 @@ export function SetupScreen({
 
         {setupStep === "api" && (
           <ApiStep
-            apiKey={settings.apiKey}
+            apiKey={tokenDraft}
             onChange={(v) => {
               setError(null);
-              save({ apiKey: v, verified: false });
+              setTokenDraft(v);
             }}
             onBack={() => setSetupStep("port")}
-            onVerify={() => verify().then(() => setSetupStep("api"))}
+            onVerify={() => void verify(tokenDraft).catch(() => undefined)}
             verifying={verifying}
             verified={verified}
             error={error}

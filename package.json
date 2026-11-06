@@ -1,7 +1,7 @@
 {
   "name": "tunneldash",
   "private": true,
-  "version": "0.4.0",
+  "version": "0.4.1",
   "type": "module",
   "description": "Tiny Cloudflare Tunnel sidekick with native SSH terminal launching (Tauri + React)",
   "author": "Mauro Druwel",
@@ -30,6 +30,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "vitest run",
+    "test:e2e": "playwright test",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -41,6 +42,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
+    "@playwright/test": "1.65.0",
     "@tauri-apps/cli": "^2.11.4",
     "@types/react": "^18.3.1",
     "@types/react-dom": "^18.3.1",

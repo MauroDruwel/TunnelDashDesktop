@@ -34,3 +34,5 @@ src-tauri/binaries/
 
 # OS
 Thumbs.db
+test-results/
+playwright-report/

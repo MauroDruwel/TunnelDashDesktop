@@ -22,6 +22,7 @@ This file provides context, commands, and operational guardrails for AI coding a
 | **Native App Build** | `pnpm tauri build` | Bundles native desktop application (`.app` / `.dmg` on macOS, `.msi` on Windows). |
 | **Development Server** | `pnpm tauri dev` | Starts Vite dev server + Tauri native desktop window. |
 | **Frontend Unit Tests** | `pnpm test` | Runs Vitest test suite (`src/**/*.test.ts`). |
+| **Browser Tests** | `pnpm test:e2e` | Install Chromium with `pnpm exec playwright install chromium`. Uses demo fixtures; no Cloudflare or SSH connections. |
 | **Rust Backend Tests** | `cargo test --manifest-path src-tauri/Cargo.toml` | Runs Rust unit & integration tests. |
 | **Typecheck** | `pnpm typecheck` | Strict `tsc --noEmit` validation. |
 | **Lint** | `pnpm lint` | Runs ESLint. Must pass with zero warnings. |

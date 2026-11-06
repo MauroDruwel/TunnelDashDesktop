@@ -1,3 +1,4 @@
+mod api_token;
 pub mod cli;
 mod cloudflare;
 mod ssh;
@@ -52,6 +53,9 @@ pub fn run() {
 
     let app = builder
         .invoke_handler(tauri::generate_handler![
+            api_token::read_api_token,
+            api_token::write_api_token,
+            tunnels::list_active_proxy_hosts,
             cloudflare::cf_accounts,
             cloudflare::cf_tunnels,
             cloudflare::cf_tunnel_config,

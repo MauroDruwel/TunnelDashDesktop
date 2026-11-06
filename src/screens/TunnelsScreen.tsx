@@ -1,4 +1,5 @@
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { ProtocolFilter } from "../components/ProtocolFilter";
 import { TunnelSummary, ConfigInfo, Settings } from "../types";
 import {
   RefreshIcon,
@@ -41,25 +42,11 @@ export function TunnelsScreen({
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<"all" | "healthy" | "down">("all");
   const [selectedProtos, setSelectedProtos] = useState<string[]>([]);
-  const [protoDropdownOpen, setProtoDropdownOpen] = useState(false);
-  const protoDropdownRef = useRef<HTMLDivElement>(null);
   const [expandedTunnels, setExpandedTunnels] = useState<Record<string, boolean>>(() => {
     return tunnels[0]?.id ? { [tunnels[0].id]: true } : {};
   });
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
-  // Close dropdown on click outside
-  useEffect(() => {
-    const handleOutside = (e: MouseEvent) => {
-      if (protoDropdownRef.current && !protoDropdownRef.current.contains(e.target as Node)) {
-        setProtoDropdownOpen(false);
-      }
-    };
-    if (protoDropdownOpen) {
-      document.addEventListener("mousedown", handleOutside);
-      return () => document.removeEventListener("mousedown", handleOutside);
-    }
-  }, [protoDropdownOpen]);
 
   // Keep first tunnel expanded once data loads (handles initial empty state)
   useEffect(() => {
@@ -319,6 +306,7 @@ export function TunnelsScreen({
             <input
               type="text"
               className="cf-search-input"
+              aria-label="Search tunnels"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search tunnels by name, ID, or hostname..."
@@ -362,140 +350,13 @@ export function TunnelsScreen({
               )}
             </div>
 
-            <div className="cf-filter-dropdown-wrapper" ref={protoDropdownRef}>
-              <button
-                type="button"
-                className={`cf-filter-dropdown-btn ${selectedProtos.length > 0 ? "active" : ""}`}
-                onClick={() => setProtoDropdownOpen((prev) => !prev)}
-                title="Filter routes by protocol"
-              >
-                <span>
-                  {selectedProtos.length === 0
-                    ? `All Routes (${totalRoutesCount})`
-                    : selectedProtos.length === 1
-                    ? `${selectedProtos[0].toUpperCase()} (${
-                        selectedProtos[0] === "ssh"
-                          ? sshRoutesCount
-                          : selectedProtos[0] === "http"
-                          ? httpRoutesCount
-                          : selectedProtos[0] === "tcp"
-                          ? tcpRoutesCount
-                          : selectedProtos[0] === "rdp"
-                          ? rdpRoutesCount
-                          : smbRoutesCount
-                      })`
-                    : `Routes: ${selectedProtos.map((p) => p.toUpperCase()).join(", ")}`}
-                </span>
-                <ChevronDownIcon
-                  size={12}
-                  style={{
-                    transition: "transform 0.2s ease",
-                    transform: protoDropdownOpen ? "rotate(180deg)" : "rotate(0deg)",
-                  }}
-                />
-              </button>
-
-              {protoDropdownOpen && (
-                <div className="cf-filter-dropdown-menu">
-                  <div className="cf-filter-dropdown-header">Filter Routes</div>
-                  <div
-                    className="cf-filter-dropdown-item"
-                    onClick={() => setSelectedProtos([])}
-                  >
-                    <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <input
-                        type="checkbox"
-                        checked={selectedProtos.length === 0}
-                        onChange={() => setSelectedProtos([])}
-                      />
-                      <span>All Protocols</span>
-                    </span>
-                    <span className="cf-filter-dropdown-count">{totalRoutesCount}</span>
-                  </div>
-
-                  <div style={{ height: 1, backgroundColor: "var(--kumo-line)", margin: "4px 0" }} />
-
-                  <div
-                    className="cf-filter-dropdown-item"
-                    onClick={() => toggleProtoFilter("ssh")}
-                  >
-                    <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <input
-                        type="checkbox"
-                        checked={selectedProtos.includes("ssh")}
-                        onChange={() => toggleProtoFilter("ssh")}
-                      />
-                      <span className="cf-proto-tag ssh">SSH</span>
-                    </span>
-                    <span className="cf-filter-dropdown-count">{sshRoutesCount}</span>
-                  </div>
-
-                  <div
-                    className="cf-filter-dropdown-item"
-                    onClick={() => toggleProtoFilter("http")}
-                  >
-                    <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <input
-                        type="checkbox"
-                        checked={selectedProtos.includes("http")}
-                        onChange={() => toggleProtoFilter("http")}
-                      />
-                      <span className="cf-proto-tag http">HTTP</span>
-                    </span>
-                    <span className="cf-filter-dropdown-count">{httpRoutesCount}</span>
-                  </div>
-
-                  <div
-                    className="cf-filter-dropdown-item"
-                    onClick={() => toggleProtoFilter("tcp")}
-                  >
-                    <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <input
-                        type="checkbox"
-                        checked={selectedProtos.includes("tcp")}
-                        onChange={() => toggleProtoFilter("tcp")}
-                      />
-                      <span className="cf-proto-tag tcp">TCP</span>
-                    </span>
-                    <span className="cf-filter-dropdown-count">{tcpRoutesCount}</span>
-                  </div>
-
-                  {rdpRoutesCount > 0 && (
-                    <div
-                      className="cf-filter-dropdown-item"
-                      onClick={() => toggleProtoFilter("rdp")}
-                    >
-                      <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <input
-                          type="checkbox"
-                          checked={selectedProtos.includes("rdp")}
-                          onChange={() => toggleProtoFilter("rdp")}
-                        />
-                        <span className="cf-proto-tag rdp">RDP</span>
-                      </span>
-                      <span className="cf-filter-dropdown-count">{rdpRoutesCount}</span>
-                    </div>
-                  )}
-
-                  {smbRoutesCount > 0 && (
-                    <div
-                      className="cf-filter-dropdown-item"
-                      onClick={() => toggleProtoFilter("smb")}
-                    >
-                      <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <input
-                          type="checkbox"
-                          checked={selectedProtos.includes("smb")}
-                          onChange={() => toggleProtoFilter("smb")}
-                        />
-                        <span className="cf-proto-tag smb">SMB</span>
-                      </span>
-                      <span className="cf-filter-dropdown-count">{smbRoutesCount}</span>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+            <ProtocolFilter
+              counts={{ ssh: sshRoutesCount, http: httpRoutesCount, tcp: tcpRoutesCount, rdp: rdpRoutesCount, smb: smbRoutesCount }}
+              total={totalRoutesCount}
+              selected={selectedProtos}
+              toggle={toggleProtoFilter}
+              reset={() => setSelectedProtos([])}
+            />
           </div>
         </div>
 

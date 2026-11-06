@@ -169,6 +169,21 @@
 }
 
 /* ─── Modal & SSH Dialogs ─────────────────────────────────────────────────── */
+.cf-native-modal {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  width: min(640px, calc(100% - 32px));
+  margin: auto;
+}
+
+.cf-native-modal .cf-modal-card { margin: auto; }
+.cf-native-modal::backdrop {
+  background-color: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+}
+
 .cf-modal-backdrop {
   position: fixed;
   inset: 0;

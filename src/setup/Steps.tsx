@@ -67,8 +67,9 @@ export function PortStep({
       </div>
 
       <div className="cf-form-group">
-        <label className="cf-form-label">Starting Port (Default: 50000)</label>
+        <label htmlFor="setup-port" className="cf-form-label">Starting Port (Default: 50000)</label>
         <input
+          id="setup-port"
           type="number"
           className="cf-form-input"
           value={port}
@@ -127,9 +128,10 @@ export function ApiStep({
       </div>
 
       <div className="cf-form-group">
-        <label className="cf-form-label">API Token</label>
+        <label htmlFor="setup-token" className="cf-form-label">API Token</label>
         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
           <input
+            id="setup-token"
             type={show ? "text" : "password"}
             className="cf-form-input"
             style={{ flex: 1 }}
@@ -141,6 +143,7 @@ export function ApiStep({
           />
           <button
             type="button"
+            aria-label={show ? "Hide API token" : "Show API token"}
             className="btn-cf-secondary"
             onClick={() => setShow(!show)}
           >

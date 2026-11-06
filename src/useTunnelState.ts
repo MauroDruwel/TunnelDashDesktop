@@ -22,6 +22,7 @@ import {
   toTunnelSummary,
 } from "./utils/tunnelTransforms";
 import { errMsg } from "./utils/errors";
+import { useProxyStatus } from "./useProxyStatus";
 
 export type UpdateBanner = { version: string; url: string };
 
@@ -43,6 +44,17 @@ export function useTunnelState() {
   const settingsRef = useRef(settings);
   const verifiedRef = useRef(verified);
   const activeHostsRef = useRef(activeHosts);
+  const proxyBusy = useRef(false);
+  const credentialBusy = useRef(false);
+  const reconcileHosts = useCallback((hosts: string[]) => {
+    if (proxyBusy.current) return;
+    const previous = activeHostsRef.current;
+    if (hosts.length === previous.size && hosts.every((host) => previous.has(host))) return;
+    const next = new Set(hosts);
+    activeHostsRef.current = next;
+    setActiveHosts(next);
+  }, []);
+  useProxyStatus(connecting !== null, reconcileHosts);
   useEffect(() => {
     settingsRef.current = settings;
   }, [settings]);
@@ -61,6 +73,10 @@ export function useTunnelState() {
   }, [settings.portStart]);
 
   const save = useCallback((patch: Partial<Settings & { verified?: boolean }>) => {
+    if (credentialBusy.current) {
+      setError("Wait for the credential operation to finish before changing settings");
+      return;
+    }
     const { verified: patchVerified, ...settingsPatch } = patch as Settings & { verified?: boolean };
     const nextVerified = patchVerified ?? verifiedRef.current;
     const prevSettings = settingsRef.current;
@@ -73,7 +89,7 @@ export function useTunnelState() {
     setSettings(nextSettings);
     if (patchVerified !== undefined) setVerified(patchVerified);
     void persistSettings(nextSettings, nextVerified).catch((e) => {
-      console.warn("persist settings failed", e);
+      setError(errMsg(e, "Could not save settings"));
     });
   }, []);
 
@@ -115,9 +131,9 @@ export function useTunnelState() {
         const showSetup = new URLSearchParams(window.location.search).has("setup");
         const demo: Settings = {
           ...loadedSettings,
-          apiKey: "demo-token",
-          accountName: "Demo Corp",
-          accountId: "demo-account",
+          apiKey: showSetup ? "" : "demo-token",
+          accountName: showSetup ? undefined : "Demo Corp",
+          accountId: showSetup ? undefined : "demo-account",
         };
         setSettings(demo);
         settingsRef.current = demo;
@@ -130,30 +146,44 @@ export function useTunnelState() {
       setVerified(wasVerified);
       verifiedRef.current = wasVerified;
       void checkForUpdate(loadedSettings.lastNudgedVersion);
+    }).catch((err) => {
+      if (!cancelled) setError(errMsg(err, "Could not load settings"));
     });
     return () => {
       cancelled = true;
     };
   }, [checkForUpdate]);
 
-  const verify = useCallback(async () => {
-    const apiKey = settingsRef.current.apiKey.trim();
-    if (!apiKey) return;
+  const verify = useCallback(async (candidate?: string) => {
+    const apiKey = (candidate ?? settingsRef.current.apiKey).trim();
+    if (!apiKey) throw new Error("Enter a Cloudflare API token");
+    if (credentialBusy.current) throw new Error("Another credential operation is in progress");
+    credentialBusy.current = true;
     setError(null);
     setVerifying(true);
     try {
       const accounts = await fetchAccounts(apiKey);
       if (!accounts.length) throw new Error("No accounts returned");
       const acct = accounts[0];
-      save({ accountId: acct.id, accountName: acct.name, verified: true });
+      const next = { ...settingsRef.current, apiKey, accountId: acct.id, accountName: acct.name };
+      await persistSettings(next, true, true);
+      settingsRef.current = next;
+      verifiedRef.current = true;
+      setSettings(next);
+      setVerified(true);
     } catch (err) {
       setError(errMsg(err, "Verification failed"));
+      throw err;
     } finally {
+      credentialBusy.current = false;
       setVerifying(false);
     }
-  }, [save]);
+  }, []);
 
   const clearAll = useCallback(async () => {
+    if (credentialBusy.current) throw new Error("Wait for token verification to finish");
+    credentialBusy.current = true;
+    try {
     const hosts = Array.from(activeHostsRef.current);
     if (hosts.length) {
       await Promise.all(hosts.map((h) => stopTunnel(h).catch(() => undefined)));
@@ -169,6 +199,9 @@ export function useTunnelState() {
     setActiveHosts(new Set());
     activeHostsRef.current = new Set();
     setConnecting(null);
+    } finally {
+      credentialBusy.current = false;
+    }
   }, []);
 
   const persistAssignments = useCallback(
@@ -246,7 +279,7 @@ export function useTunnelState() {
     if (verified && settingsRef.current.apiKey && settings.accountId) {
       void loadTunnels();
     }
-  }, [verified, settings.accountId, loadTunnels]);
+  }, [verified, settings.accountId, settings.apiKey, loadTunnels]);
 
   // When portStart changes, reassign local ports in-memory without a redundant network fetch
   useEffect(() => {
@@ -284,16 +317,18 @@ export function useTunnelState() {
 
   const toggleTunnel = useCallback(
     async (t: TunnelSummary, cfg: ConfigInfo) => {
+      if (proxyBusy.current) return;
       const portStart = settingsRef.current.portStart;
       const host = cfg.host || cfg.hostname || parseHost(cfg.service) || t.id;
       const localPort = Number(cfg.port ?? t.port ?? portStart);
-      if (!Number.isFinite(localPort) || localPort < 1024 || localPort > 65535) {
+      const isRunning = activeHostsRef.current.has(host);
+      if (!isRunning && (!Number.isInteger(localPort) || localPort < 1024 || localPort > 65535)) {
         setError("Pick a valid local port before starting a tunnel");
         return;
       }
 
       const protocol = cfg.proto || parseProtocol(cfg.service) || "tcp";
-      const isRunning = activeHostsRef.current.has(host);
+      proxyBusy.current = true;
       setConnecting(host);
       setError(null);
       try {
@@ -317,6 +352,7 @@ export function useTunnelState() {
       } catch (err) {
         setError(errMsg(err, "Tunnel toggle failed"));
       } finally {
+        proxyBusy.current = false;
         setConnecting(null);
       }
     },

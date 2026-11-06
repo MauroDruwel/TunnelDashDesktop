@@ -24,7 +24,8 @@ describe("settingsStorage", () => {
   });
 
   it("persists and reloads settings with verification flag", async () => {
-    await persistSettings({ ...DEFAULT_SETTINGS, apiKey: "abc", accountId: "acct" }, true);
+    await persistSettings({ ...DEFAULT_SETTINGS, apiKey: "abc", accountId: "acct" }, true, true);
+    expect(store.get("tunneldash:settings")).not.toContain("abc");
     const { settings, verified } = await loadSettings();
     expect(verified).toBe(true);
     expect(settings.apiKey).toBe("abc");
@@ -32,7 +33,7 @@ describe("settingsStorage", () => {
   });
 
   it("clears stored settings", async () => {
-    await persistSettings({ ...DEFAULT_SETTINGS, apiKey: "abc" }, true);
+    await persistSettings({ ...DEFAULT_SETTINGS, apiKey: "abc" }, true, true);
     await clearStoredSettings();
     const { settings, verified } = await loadSettings();
     expect(verified).toBe(false);

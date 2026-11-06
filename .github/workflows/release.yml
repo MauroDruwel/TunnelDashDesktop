@@ -6,36 +6,48 @@ on:
       - 'v*'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
-  publish:
-    permissions:
-      contents: write
+  quality:
+    uses: ./.github/workflows/ci.yml
+
+  version:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Verify release tag and app versions
+        run: node scripts/check-versions.mjs --release
+
+  build:
+    needs: [quality, version]
     strategy:
       fail-fast: false
       matrix:
         include:
-          - platform: macos-latest
+          - platform: macos-15
             target: aarch64-apple-darwin
-            args: --target aarch64-apple-darwin
-          - platform: macos-latest
+            args: --target aarch64-apple-darwin --bundles dmg
+          - platform: macos-15-intel
             target: x86_64-apple-darwin
-            args: --target x86_64-apple-darwin
-          - platform: ubuntu-22.04
-            target: ''
-            args: ''
-          - platform: windows-latest
-            target: ''
-            args: ''
+            args: --target x86_64-apple-darwin --bundles dmg
+          - platform: ubuntu-24.04
+            target: x86_64-unknown-linux-gnu
+            args: --target x86_64-unknown-linux-gnu --bundles appimage
+          - platform: windows-2022
+            target: x86_64-pc-windows-msvc
+            args: --target x86_64-pc-windows-msvc --bundles msi
     runs-on: ${{ matrix.platform }}
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: pnpm/action-setup@v6
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
         with:
           version: 10
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
           cache: pnpm
@@ -48,45 +60,33 @@ jobs:
 
       - name: Install system deps (Linux)
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential pkg-config libayatana-appindicator3-dev librsvg2-dev
+        run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential pkg-config libayatana-appindicator3-dev librsvg2-dev patchelf
 
       - name: Install app deps
         run: pnpm install --frozen-lockfile
 
       - name: Download cloudflared sidecar
+        env:
+          CLOUDFLARED_TARGET_TRIPLE: ${{ matrix.target }}
         run: node scripts/download-cloudflared.mjs
 
-      - name: Build and publish to GitHub Releases
-        uses: tauri-apps/tauri-action@v1
+      - name: Verify sidecar and run native tests
+        shell: bash
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TARGET: ${{ matrix.target }}
+        run: |
+          suffix=""
+          if [[ "$RUNNER_OS" == "Windows" ]]; then suffix=".exe"; fi
+          "./src-tauri/binaries/cloudflared-$TARGET$suffix" --version
+          cargo test --manifest-path src-tauri/Cargo.toml --locked --features cli --target "$TARGET"
+
+      - name: Build installers
+        uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # v1.0.0
         with:
           projectPath: .
           tauriScript: pnpm tauri
-          tagName: ${{ github.ref_name }}
-          releaseName: TunnelDash ${{ github.ref_name }}
-          releaseBody: |
-            ## TunnelDash ${{ github.ref_name }}
-
-            Installers for macOS (Apple Silicon + Intel), Windows, and Linux. cloudflared is bundled - no manual install.
-
-            ### Features
-            - Cloudflare tunnels: verify your token, list tunnels, flip them on/off
-            - SSH Sessions tab: native terminal launching (password or SSH-key auth)
-            - Saved Credentials manager + encrypted cross-device sync (AES-256-GCM)
-            - Menu bar tray + optional launch-at-login
-            - `tunneldash-cli` for list/status/connect/stop from the terminal or AI agents
-            - Auto update notice: a new version opens the releases page once, then shows a banner
-
-            ### Endpoints Used
-            - `GET /accounts` (Auth check)
-            - `GET /.../cfd_tunnel` (List tunnels)
-            - `GET /.../configurations` (Read ingress rules)
-            - `PATCH /.../cfd_tunnel` (Save port assignments + credential vault)
-
-            > Screenshots: see the [README](https://github.com/MauroDruwel/TunnelDashDesktop#-screenshots).
-          prerelease: ${{ contains(github.ref_name, 'pre') || contains(github.ref_name, 'rc') || contains(github.ref_name, 'beta') }}
-          releaseDraft: ${{ !(contains(github.ref_name, 'pre') || contains(github.ref_name, 'rc') || contains(github.ref_name, 'beta')) }}
+          uploadWorkflowArtifacts: true
+          workflowArtifactNamePattern: "[platform]-[arch]-[bundle]"
           args: ${{ matrix.args }}
 
       - name: Build tunneldash-cli
@@ -95,20 +95,61 @@ jobs:
           cd src-tauri
           TARGET="${{ matrix.target }}"
           if [ -n "$TARGET" ]; then
-            cargo build --release --features cli --bin tunneldash-cli --target "$TARGET"
+            cargo build --locked --release --features cli --bin tunneldash-cli --target "$TARGET"
             BIN="target/$TARGET/release/tunneldash-cli"
           else
             cargo build --release --features cli --bin tunneldash-cli
             BIN="target/release/tunneldash-cli"
           fi
-          if [ "$RUNNER_OS" = "Windows" ]; then BIN="$BIN.exe"; fi
-          cp "$BIN" "$GITHUB_WORKSPACE/tunneldash-cli-${{ runner.os }}"
+          SUFFIX=""
+          if [ "$RUNNER_OS" = "Windows" ]; then BIN="$BIN.exe"; SUFFIX=".exe"; fi
+          "./$BIN" --help
+          cp "$BIN" "$GITHUB_WORKSPACE/tunneldash-cli-$TARGET$SUFFIX"
 
-      - name: Upload CLI to release
-        uses: softprops/action-gh-release@v3
-        if: startsWith(github.ref, 'refs/tags/')
+      - name: Stage CLI artifact
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          tag_name: ${{ github.ref_name }}
-          files: tunneldash-cli-*
+          name: cli-${{ matrix.target }}
+          path: tunneldash-cli-*
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          path: release-assets
+      - name: Create release after all builds succeed
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            echo "Release already exists; refusing to overwrite its assets." >&2
+            exit 1
+          fi
+          mkdir -p publish
+          stage() {
+            local pattern="$1" name="$2"
+            local -a matches
+            mapfile -d '' matches < <(find release-assets -type f -iname "$pattern" -print0)
+            if (( ${#matches[@]} != 1 )); then
+              echo "Expected one artifact matching $pattern; found ${#matches[@]}" >&2
+              return 1
+            fi
+            cp "${matches[0]}" "publish/$name"
+          }
+          stage '*aarch64.dmg' TunnelDash-macos-arm64.dmg
+          stage '*x64.dmg' TunnelDash-macos-x64.dmg
+          stage '*.msi' TunnelDash-windows-x64.msi
+          stage '*.AppImage' TunnelDash-linux-x64.AppImage
+          for target in aarch64-apple-darwin x86_64-apple-darwin x86_64-unknown-linux-gnu x86_64-pc-windows-msvc.exe; do
+            stage "tunneldash-cli-$target" "tunneldash-cli-$target"
+          done
+          flags=(--latest)
+          if [[ "$RELEASE_TAG" == *-* ]]; then flags=(--prerelease); fi
+          gh release create "$RELEASE_TAG" publish/* --verify-tag --generate-notes "${flags[@]}"
