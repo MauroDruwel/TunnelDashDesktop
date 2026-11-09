@@ -455,8 +455,7 @@ fn pick_free_port(start: &Option<String>) -> u16 {
 
 /// Spawn cloudflared access for `host` and wait until the local listener answers.
 fn spawn_proxy(host: &str, port: u16) -> Result<u32, String> {
-    let bin = resolve_cloudflared(None)
-        .ok_or_else(|| "cloudflared not found — install it (brew install cloudflared) or launch the desktop app once".to_string())?;
+    let bin = resolve_cloudflared(None).ok_or(crate::cloudflared::MISSING)?;
 
     let log_path = shared_cache_dir(None).join(format!("cloudflared-cli-{}.log", sanitize(host)));
     let log = std::fs::OpenOptions::new()

@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { invoke } from "@tauri-apps/api/core";
 import {
   DEMO_MODE,
   fetchAccounts,
@@ -24,7 +23,6 @@ import {
 import { errMsg } from "./utils/errors";
 import { useProxyStatus } from "./useProxyStatus";
 
-export type UpdateBanner = { version: string; url: string };
 
 // Centralized state and actions for settings, verification, and tunnel control.
 export function useTunnelState() {
@@ -38,7 +36,6 @@ export function useTunnelState() {
   const [connecting, setConnecting] = useState<string | null>(null);
   const [activeHosts, setActiveHosts] = useState<Set<string>>(new Set());
   const [cfVersion, setCfVersion] = useState<string | null>(null);
-  const [update, setUpdate] = useState<UpdateBanner | null>(null);
 
   // Refs to avoid stale closures in callbacks
   const settingsRef = useRef(settings);
@@ -93,33 +90,6 @@ export function useTunnelState() {
     });
   }, []);
 
-  // Update check: silent best-effort probe of the latest GitHub release. When
-  // a new version appears, the releases page is opened once per version (the
-  // nag guard lives in settings) and a dismissible banner is shown.
-  const checkForUpdate = useCallback(
-    async (nudged?: string) => {
-      if (DEMO_MODE) return;
-      if (typeof window === "undefined" || !("__TAURI_INTERNALS__" in window)) return;
-      try {
-        const info = await invoke<UpdateBanner | null>("check_for_update");
-        if (!info) return;
-        setUpdate(info);
-        if (nudged !== info.version) {
-          void invoke("open_release_page").catch(() => undefined);
-          save({ lastNudgedVersion: info.version });
-        }
-      } catch {
-        // Offline / rate-limited / web preview — never nag about failures.
-      }
-    },
-    [save]
-  );
-
-  const dismissUpdate = useCallback(() => setUpdate(null), []);
-  const openUpdatePage = useCallback(() => {
-    void invoke("open_release_page").catch(() => undefined);
-  }, []);
-
   useEffect(() => {
     // Boot: hydrate settings/token from storage so the UI can skip setup if already verified.
     // In demo mode (`?demo`) skip setup unless `?setup` is present, so docs screenshots
@@ -145,14 +115,13 @@ export function useTunnelState() {
       settingsRef.current = loadedSettings;
       setVerified(wasVerified);
       verifiedRef.current = wasVerified;
-      void checkForUpdate(loadedSettings.lastNudgedVersion);
     }).catch((err) => {
       if (!cancelled) setError(errMsg(err, "Could not load settings"));
     });
     return () => {
       cancelled = true;
     };
-  }, [checkForUpdate]);
+  }, []);
 
   const verify = useCallback(async (candidate?: string) => {
     const apiKey = (candidate ?? settingsRef.current.apiKey).trim();
@@ -302,16 +271,24 @@ export function useTunnelState() {
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
+    let checking = false;
+    const checkVersion = async () => {
+      if (checking) return;
+      checking = true;
       try {
         const ver = await fetchCloudflaredVersion();
         if (!cancelled) setCfVersion(ver || null);
-      } catch (e) {
-        if (!cancelled) console.warn("cloudflared --version failed", e);
+      } catch {
+        if (!cancelled) setCfVersion(null);
+      } finally {
+        checking = false;
       }
-    })();
+    };
+    void checkVersion();
+    window.addEventListener("focus", checkVersion);
     return () => {
       cancelled = true;
+      window.removeEventListener("focus", checkVersion);
     };
   }, []);
 
@@ -380,9 +357,6 @@ export function useTunnelState() {
     connecting,
     isPortValid,
     cloudflaredVersion,
-    update,
-    dismissUpdate,
-    openUpdatePage,
   };
 }
 

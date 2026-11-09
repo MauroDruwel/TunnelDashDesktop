@@ -5066,7 +5066,7 @@ checksum = "e421abadd41a4225275504ea4d6566923418b7f05506fbc9c0fe86ba7396114b"
 
 [[package]]
 name = "tunneldash"
-version = "0.4.1"
+version = "0.4.2"
 dependencies = [
  "aes-gcm",
  "base64 0.22.1",
@@ -5076,6 +5076,7 @@ dependencies = [
  "pbkdf2",
  "rand 0.8.5",
  "reqwest 0.12.28",
+ "semver",
  "serde",
  "serde_json",
  "sha2",

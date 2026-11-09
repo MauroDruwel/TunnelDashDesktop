@@ -131,8 +131,9 @@ export async function updateTunnelMetadata(
 }
 
 export async function fetchCloudflaredVersion(): Promise<string> {
-  if (DEMO_MODE) return demoDelay("cloudflared version 2026.8.2");
-  return invoke<string>("cloudflared_version");
+  if (DEMO_MODE) return demoDelay("cloudflared version 2026.8.2 · System installation");
+  const { version, source } = await invoke<{ version: string; source: "system" | "bundled" }>("cloudflared_status");
+  return `${version} · ${source === "system" ? "System installation" : "Bundled with TunnelDash"}`;
 }
 
 export async function startTunnel(hostname: string, localPort: number, protocol?: string) {

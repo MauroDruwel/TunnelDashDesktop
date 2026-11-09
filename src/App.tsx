@@ -8,6 +8,8 @@ import { TunnelsScreen } from "./screens/TunnelsScreen";
 import { SettingsScreen } from "./screens/SettingsScreen";
 import { SshScreen } from "./screens/SshScreen";
 import {
+  DEMO_MODE,
+  openUrl,
   sshGetCredential,
   sshGetConfigStatus,
   sshSyncConfig,
@@ -16,11 +18,13 @@ import {
 } from "./api";
 import { collectSshServers, deriveHostAlias } from "./utils/tunnelTransforms";
 import { SshModal } from "./components/SshModal";
-import { CloseIcon, SunIcon, MoonIcon } from "./components/icons";
+import { SunIcon, MoonIcon } from "./components/icons";
 import { DashboardSidebar } from "./components/DashboardSidebar";
+import { useStartupUpdate } from "./utils/appUpdates";
 import "./App.css";
 
 export function App() {
+  const { update, dismissUpdate } = useStartupUpdate(!DEMO_MODE);
   const {
     settings,
     save: saveSettings,
@@ -40,9 +44,6 @@ export function App() {
     isPortValid,
     cloudflaredVersion,
     allTunnels,
-    update,
-    dismissUpdate,
-    openUpdatePage,
   } = useTunnelState();
 
   const [activeTab, setActiveTab] = useState<"tunnels" | "ssh" | "settings">(() => {
@@ -180,6 +181,16 @@ export function App() {
 
 
 
+  const updateNotice = update && (
+    <div className="cf-update-banner">
+      <span role="status">TunnelDash v{update.latest_version} is available.</span>
+      <span className="cf-update-banner-actions">
+        <button type="button" className="btn-cf-secondary small" onClick={() => void openUrl(update.html_url)}>View Release</button>
+        <button type="button" className="btn-cf-secondary small" aria-label="Dismiss update notice" onClick={dismissUpdate}>Dismiss</button>
+      </span>
+    </div>
+  );
+
   // Full-screen onboarding only when there's no account yet — re-verifying a
   // token from Settings must NOT kick the user back to the setup wizard.
   if (!verified && !settings.accountId) {
@@ -190,6 +201,7 @@ export function App() {
             {theme === "light" ? <MoonIcon size={16} /> : <SunIcon size={16} />}
           </button>
         </div>
+        {updateNotice && <div>{updateNotice}</div>}
         <SetupScreen
           settings={settings}
           save={saveSettings}
@@ -227,27 +239,7 @@ export function App() {
       <main className="cf-kumo-main">
         <div className="cf-kumo-main-drag" data-tauri-drag-region />
         <div className="cf-kumo-content-container">
-          {update && (
-            <div className="cf-update-banner" role="status">
-              <span>
-                A new TunnelDash version ({update.version.replace(/^v/i, "")}) is available.
-              </span>
-              <span className="cf-update-banner-actions">
-                <button type="button" className="btn-cf-secondary small" onClick={openUpdatePage}>
-                  Download
-                </button>
-                <button
-                  type="button"
-                  className="cf-icon-btn"
-                  title="Dismiss"
-                  aria-label="Dismiss update notice"
-                  onClick={dismissUpdate}
-                >
-                  <CloseIcon size={14} />
-                </button>
-              </span>
-            </div>
-          )}
+          {updateNotice}
           {activeTab === "tunnels" ? (
             <TunnelsScreen
               tunnels={tunnels}

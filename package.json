@@ -1,7 +1,7 @@
 {
   "name": "tunneldash",
   "private": true,
-  "version": "0.4.1",
+  "version": "0.4.2",
   "type": "module",
   "description": "Tiny Cloudflare Tunnel sidekick with native SSH terminal launching (Tauri + React)",
   "author": "Mauro Druwel",

@@ -25,9 +25,18 @@ Discover Cloudflare Tunnel routes, start local proxies, and open SSH sessions fr
 2. Verify a Cloudflare API token with **Account Settings: Read** and **Cloudflare Tunnel: Read**. Tunnel edit permission is optional for saving port assignments remotely.
 3. Start a route proxy or open **SSH Sessions** to configure an identity and connect. Cloudflare Access policies still apply.
 
+TunnelDash prefers a working system installation of `cloudflared` and falls
+back to its bundled copy. Settings shows the selected version and source and
+links to Cloudflare’s install instructions. Sync OpenSSH config again after
+changing installations to refresh the executable path in existing aliases.
+
 The token is stored in your OS credential store. Open the updated desktop app once to migrate an existing token before using `tunneldash-cli list`.
 
 ## Develop
+
+TunnelDash checks for updates in the background on launch. You can also check
+under **Settings → Software Updates**. The release page opens only when you
+choose **View Release**.
 
 Requires Node.js 22, pnpm 10, stable Rust, and the [Tauri platform prerequisites](https://v2.tauri.app/start/prerequisites/).
 

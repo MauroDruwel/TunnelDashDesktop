@@ -1,6 +1,7 @@
 mod api_token;
 pub mod cli;
 mod cloudflare;
+mod cloudflared;
 mod ssh;
 mod sync;
 mod tray;
@@ -60,7 +61,7 @@ pub fn run() {
             cloudflare::cf_tunnels,
             cloudflare::cf_tunnel_config,
             cloudflare::cf_update_tunnel_metadata,
-            tunnels::cloudflared_version,
+            cloudflared::cloudflared_status,
             tunnels::start_tunnel,
             tunnels::stop_tunnel,
             tunnels::get_tunnel_command,
@@ -79,8 +80,7 @@ pub fn run() {
             ssh::launch_smb,
             sync::ssh_sync_build_vault,
             sync::ssh_sync_open_vault,
-            update::check_for_update,
-            update::open_release_page,
+            update::check_for_updates,
             update::open_url
         ])
         .build(tauri::generate_context!())

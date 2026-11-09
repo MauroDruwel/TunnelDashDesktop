@@ -61,8 +61,6 @@ export type Settings = {
   defaultSshUser?: string;
   /** Global default private key path (IdentityFile) for ~/.ssh/config entries (e.g. ~/.ssh/id_ed25519). */
   defaultSshKeyPath?: string;
-  /** Last version we auto-opened the releases page for (update nag guard). */
-  lastNudgedVersion?: string;
 };
 
 export type TunnelCommandDetails = {

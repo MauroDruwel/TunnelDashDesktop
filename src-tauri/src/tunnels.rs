@@ -143,135 +143,8 @@ pub(crate) fn persist_proxies(app: Option<&AppHandle>) {
     }
 }
 
-fn cloudflared_binary_name() -> &'static str {
-    if cfg!(windows) {
-        "cloudflared.exe"
-    } else {
-        "cloudflared"
-    }
-}
-
-/// Resolve the cloudflared binary. The Tauri handle is optional so the CLI
-/// binary can share this logic without spinning up an app context.
 pub(crate) fn resolve_cloudflared(app: Option<&AppHandle>) -> Option<PathBuf> {
-    let name = cloudflared_binary_name();
-
-    // 1. Check standard host installation paths first (e.g. Homebrew, system install)
-    #[cfg(target_os = "windows")]
-    {
-        for candidate in [
-            "C:\\Program Files\\cloudflared\\cloudflared.exe",
-            "C:\\Program Files (x86)\\cloudflared\\cloudflared.exe",
-        ] {
-            let p = PathBuf::from(candidate);
-            if p.exists() {
-                return Some(p);
-            }
-        }
-    }
-    #[cfg(not(target_os = "windows"))]
-    {
-        for candidate in [
-            "/opt/homebrew/bin/cloudflared",
-            "/usr/local/bin/cloudflared",
-            "/usr/bin/cloudflared",
-        ] {
-            let p = PathBuf::from(candidate);
-            if p.exists() {
-                return Some(p);
-            }
-        }
-    }
-
-    // 2. Check system PATH
-    if let Some(paths) = std::env::var_os("PATH") {
-        if let Some(p) = std::env::split_paths(&paths)
-            .map(|dir| dir.join(name))
-            .find(|candidate| candidate.exists())
-        {
-            return Some(p);
-        }
-    }
-
-    // 3. Fallback: Tauri resource dir (bundled sidecar via externalBin)
-    if let Some(app) = app {
-        if let Ok(resource_dir) = app.path().resource_dir() {
-            for candidate in [
-                resource_dir.join(name),
-                resource_dir.join("binaries").join(name),
-            ] {
-                if candidate.exists() {
-                    return Some(candidate);
-                }
-            }
-            // Sidecar may still have target-triple suffix in dev builds; scan resource dir
-            if let Ok(entries) = std::fs::read_dir(&resource_dir) {
-                for entry in entries.flatten() {
-                    let p = entry.path();
-                    if let Some(fname) = p.file_name().and_then(|s| s.to_str()) {
-                        if fname.starts_with("cloudflared") && p.exists() {
-                            return Some(p);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    // 4. Next to current exe (covers dev and some bundle layouts)
-    if let Ok(exe) = std::env::current_exe() {
-        if let Some(dir) = exe.parent() {
-            for candidate in [dir.join(name), dir.join("binaries").join(name)] {
-                if candidate.exists() {
-                    return Some(candidate);
-                }
-            }
-        }
-    }
-
-    // 5. Dev layout: project/src-tauri/binaries/cloudflared-<triple>
-    if let Ok(cwd) = std::env::current_dir() {
-        let dev_binaries = cwd.join("src-tauri").join("binaries");
-        if dev_binaries.exists() {
-            if let Ok(entries) = std::fs::read_dir(&dev_binaries) {
-                for entry in entries.flatten() {
-                    let p = entry.path();
-                    if let Some(fname) = p.file_name().and_then(|s| s.to_str()) {
-                        if fname.starts_with("cloudflared") && p.exists() {
-                            return Some(p);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    None
-}
-
-#[tauri::command]
-pub fn cloudflared_version(app: AppHandle) -> Result<String, String> {
-    let bin = resolve_cloudflared(Some(&app)).ok_or_else(|| "cloudflared not found".to_string())?;
-    let output = Command::new(&bin)
-        .arg("--version")
-        .output()
-        .map_err(|e| format!("cloudflared --version failed: {e}"))?;
-
-    if !output.status.success() {
-        return Err(format!(
-            "cloudflared --version failed: status {}",
-            output.status
-        ));
-    }
-
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    let first_line = stdout
-        .lines()
-        .next()
-        .unwrap_or("unknown")
-        .trim()
-        .to_string();
-    Ok(first_line)
+    crate::cloudflared::detect(app).map(|status| status.path().to_path_buf())
 }
 
 #[tauri::command]
@@ -296,9 +169,7 @@ pub fn start_tunnel(
         }
     }
 
-    let bin = resolve_cloudflared(Some(&app)).ok_or_else(|| {
-        "cloudflared not found - install it or bundle it with the app".to_string()
-    })?;
+    let bin = resolve_cloudflared(Some(&app)).ok_or(crate::cloudflared::MISSING)?;
 
     let url = format!("localhost:{local_port}");
     let proto = protocol.unwrap_or_else(|| "tcp".into()).to_lowercase();
@@ -527,7 +398,7 @@ pub fn get_tunnel_command(
     local_port: u16,
     protocol: Option<String>,
 ) -> Result<TunnelCommandDetails, String> {
-    let bin = resolve_cloudflared(Some(&app)).unwrap_or_else(|| PathBuf::from("cloudflared"));
+    let bin = resolve_cloudflared(Some(&app)).ok_or(crate::cloudflared::MISSING)?;
     let proto = protocol.unwrap_or_else(|| "tcp".into()).to_lowercase();
     let sub = match proto.as_str() {
         "ssh" => "ssh",

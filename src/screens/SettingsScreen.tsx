@@ -12,6 +12,8 @@ import {
 } from "../components/icons";
 import { errMsg } from "../utils/errors";
 import { OpenSshSettings } from "./OpenSshSettings";
+import { SoftwareUpdates } from "../components/SoftwareUpdates";
+import { openUrl } from "../api";
 
 export type SettingsScreenProps = {
   settings: Settings;
@@ -543,13 +545,19 @@ export function SettingsScreen({
 
         <div className="cf-card-footer">
           <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
-            Daemon: {cloudflaredVersion ? (cloudflaredVersion.startsWith("cloudflared ") ? cloudflaredVersion : `cloudflared ${cloudflaredVersion}`) : "Not detected in system PATH"}
+            {cloudflaredVersion || "No usable cloudflared detected"}
           </span>
+          <button type="button" className="btn-cf-secondary"
+            onClick={() => void openUrl("https://developers.cloudflare.com/tunnel/downloads/")}>
+            Install or update cloudflared
+          </button>
           <button className="btn-cf-secondary" onClick={() => save({})}>
             Save
           </button>
         </div>
       </div>
+
+      <SoftwareUpdates />
 
       {/* ─── Card 6: Danger Zone ─── */}
       <div className="cf-card" style={{ borderColor: "var(--cf-red-border)" }}>
