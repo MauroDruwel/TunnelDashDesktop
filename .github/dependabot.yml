@@ -6,7 +6,10 @@ updates:
       interval: "weekly"
       day: "monday"
       time: "03:00"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 3
+    groups:
+      actions-compatible:
+        update-types: ["minor", "patch"]
     reviewers:
       - "MauroDruwel"
     labels:
@@ -22,7 +25,10 @@ updates:
       interval: "weekly"
       day: "monday"
       time: "03:00"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 3
+    groups:
+      npm-compatible:
+        update-types: ["minor", "patch"]
     reviewers:
       - "MauroDruwel"
     labels:
@@ -38,7 +44,10 @@ updates:
       interval: "weekly"
       day: "monday"
       time: "03:00"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 3
+    groups:
+      cargo-compatible:
+        update-types: ["minor", "patch"]
     reviewers:
       - "MauroDruwel"
     labels:
